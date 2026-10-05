@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentPulse • Kurumsal Çok Modlu (Multimodal) Mülakat & Büyük Veri Konsolu</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Chart.js CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- TensorFlow.js, COCO-SSD & BlazeFace (Gerçek Zamanlı WebCam Nesne & 3D Yüz/Bakış Açısı) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: rgba(226, 232, 240, 0.85);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    .dark {
+      --bg-main: #07090e;
+      --card-bg: #0e1422;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-main);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+        radial-gradient(circle at 95% 100%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 5% 90%, rgba(16, 185, 129, 0.04) 0%, transparent 45%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .card-clean {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-clean:hover {
+      box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #4f46e5;
+      border-color: #e2e8f0;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+      font-weight: 700;
+    }
+    .dark .tab-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      color: #ffffff;
+      border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #1e293b; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- ==================== AYDINLIK & MODERN ÜST NAVBAR ==================== -->
+  <header class="h-16 border-b border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-obsidian-900/85 backdrop-blur-xl px-5 md:px-8 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    
+    <!-- Sol: Logo & Başlık -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-500 flex items-center justify-center font-black text-white shadow-md shadow-brand-500/20">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">TalentPulse</span>
+          <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30">MULTIMODAL AI</span>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">HumanOre AI Platformu • Fabay Group</p>
+      </div>
+    </div>
+
+    <!-- Orta: Şık Tab Menüsü (Pill Design) -->
+    <nav class="hidden lg:flex items-center bg-slate-100/90 dark:bg-obsidian-950/90 p-1 rounded-2xl border border-slate-200 dark:border-white/[0.08] text-xs">
+      <button onclick="switchTab('overview')" id="nav-overview" class="tab-btn active px-3.5 py-1.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent transition flex items-center gap-1.5">
+        <span>📊</span> Genel Bakış
+      </button>
+      <button onclick="switchTab('candidates')" id="nav-candidates" class="tab-btn px-3.5 py-1.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent transition flex items-center gap-1.5">
+        <span>👥</span> Mülakatlar
+      </button>
+      <button onclick="switchTab('multimodal')" id="nav-multimodal" class="tab-btn px-3.5 py-1.5 rounded-xl font-semibold text-cyan-700 dark:text-cyan-300 border border-transparent transition flex items-center gap-1.5">
+        <span>🎬</span> Çok Modlu (Ses/Görüntü) &amp; Big Data
+      </button>
+      <button onclick="switchTab('questions')" id="nav-questions" class="tab-btn px-3.5 py-1.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent transition flex items-center gap-1.5">
+        <span>🦆</span> Soru Analitiği
+      </button>
+      <button onclick="switchTab('agent')" id="nav-agent" class="tab-btn px-3.5 py-1.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent transition flex items-center gap-1.5">
+        <span>🤖</span> Ajan Akışı
+      </button>
+    </nav>
+
+    <!-- Sağ: Sistem İstatistikleri, Tema ve Mülakat Butonu -->
+    <div class="flex items-center gap-3">
+      <!-- Canlı Metrik Rozeti -->
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-obsidian-950/80 border border-slate-200/80 dark:border-white/[0.08] text-[11px] font-mono text-slate-700 dark:text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="live-clock">--:--:--</span>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <span class="text-cyan-600 dark:text-cyan-400 font-bold"><span id="server-ping">8</span>ms</span>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <span class="text-brand-600 dark:text-brand-300 font-bold"><span id="stream-eps">0.0</span> eps</span>
+      </div>
+
+      <!-- Tema Değiştirici (Aydınlık / Karanlık) -->
+      <button onclick="toggleTheme()" id="theme-toggle-btn" title="Temayı Değiştir" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-obsidian-850 dark:hover:bg-obsidian-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] text-xs transition">
+        🌙
+      </button>
+
+      <!-- Canlı Mülakata Başla Butonu -->
+      <button onclick="openStudioModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+        <span>🎙️ Canlı Mülakat Odası</span>
+      </button>
+
+      <!-- Simülasyon Akışı -->
+      <button onclick="simulateBurst(5)" title="5 Simüle Aday Akıt" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-obsidian-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] text-xs transition">
+        ▶
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== ANA İÇERİK ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-5 md:p-8 space-y-6">
+
+    <!-- SEKME 1: GENEL BAKIŞ (OVERVIEW) -->
+    <div id="tab-content-overview" class="tab-pane space-y-6">
+      
+      <!-- Modern Başlık & Hedef Kartı -->
+      <div class="card-clean rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-white via-slate-50 to-brand-50/30 dark:from-obsidian-900 dark:via-obsidian-850 dark:to-brand-950/20">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30">
+              YBS 2026 • ÖMER ÇAKAN
+            </span>
+            <span class="text-xs text-slate-500 font-mono">İsa Kedikoğlu Teknik Değerlendirmesi</span>
+          </div>
+          <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Çok Modlu Ses &amp; Video Mülakat Değerlendirme Platformu
+          </h1>
+          <p class="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+            Adayların video ve ses sinyallerini işler (FFmpeg SNR, netlik, göz teması, konuşma hızı), sekme ihlallerini kaydeder ve Tech Lead için anında özel teknik soru notu üretir.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 bg-white dark:bg-obsidian-950/80 border border-slate-200 dark:border-white/[0.08] px-4 py-3 rounded-2xl shadow-sm">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-700 dark:text-purple-400 text-sm font-bold">
+            🎯
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-mono text-slate-400 block font-semibold">Hedef Değerlendirici</span>
+            <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              İsa Kedikoğlu (Teams)
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Temiz & Parlak KPI Kartı -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="card-clean rounded-2xl p-5">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider font-mono">Toplam Mülakat</span>
+            <span class="text-brand-600 dark:text-brand-400 font-mono text-xs font-semibold">DuckDB OLAP</span>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h2 id="stat-total" class="text-3xl font-black text-slate-900 dark:text-white">0</h2>
+            <span class="text-xs text-slate-500">oturum</span>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 font-mono">Columnar In-Memory</p>
+        </div>
+
+        <div class="card-clean rounded-2xl p-5">
+          <div class="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+            <span class="text-xs font-bold uppercase tracking-wider font-mono">Teams Daveti</span>
+            <span id="stat-recommended-pct" class="text-xs font-bold font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30">%0</span>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h2 id="stat-recommended" class="text-3xl font-black text-emerald-600 dark:text-emerald-400">0</h2>
+            <span class="text-xs text-slate-500">aday</span>
+          </div>
+          <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-2 font-mono">Teknik Eşiği Geçenler</p>
+        </div>
+
+        <div class="card-clean rounded-2xl p-5">
+          <div class="flex items-center justify-between text-cyan-700 dark:text-cyan-400">
+            <span class="text-xs font-bold uppercase tracking-wider font-mono">Akustik Netlik</span>
+            <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30">FFmpeg SNR</span>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h2 id="stat-clarity" class="text-3xl font-black text-cyan-600 dark:text-cyan-400">%88</h2>
+            <span class="text-xs text-slate-500">ses kalitesi</span>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 font-mono">16kHz Mono PCM Standart</p>
+        </div>
+
+        <div class="card-clean rounded-2xl p-5">
+          <div class="flex items-center justify-between text-brand-700 dark:text-brand-400">
+            <span class="text-xs font-bold uppercase tracking-wider font-mono">Çok Modlu Skor</span>
+            <span class="text-xs text-brand-600 dark:text-brand-300 font-mono font-semibold"><span id="avg-latency">0.3</span>ms</span>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h2 id="stat-avg-score" class="text-3xl font-black text-brand-600 dark:text-brand-400">0%</h2>
+            <span class="text-xs text-slate-500">kompozit</span>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 font-mono">Ses + Video + Semantik</p>
+        </div>
+
+      </div>
+
+      <!-- Modern & Ferah Grafikler -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 card-clean rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Pozisyon Bazında Başarı &amp; Hacim</h3>
+            <span class="text-[10px] font-mono font-semibold text-slate-500 bg-slate-100 dark:bg-obsidian-950 px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.08]">Dağılım</span>
+          </div>
+          <div class="h-64">
+            <canvas id="roleChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card-clean rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Karar Dağılımı</h3>
+            <span class="text-[10px] font-mono font-semibold text-slate-500 bg-slate-100 dark:bg-obsidian-950 px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.08]">Sonuçlar</span>
+          </div>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SEKME 2: MÜLAKAT OTURUMLARI (CANDIDATES TABLE) -->
+    <div id="tab-content-candidates" class="tab-pane hidden space-y-4">
+      <div class="card-clean rounded-3xl p-6 space-y-4">
+        
+        <!-- Üst Arama & Filtre Çubuğu -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/[0.08] pb-4">
+          <div class="flex-1 max-w-sm">
+            <input type="text" id="search-input" onkeyup="filterTable()" placeholder="Aday veya oturum ara..." class="w-full bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.08] text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 rounded-xl px-4 py-2 focus:outline-none focus:border-brand-500 focus:bg-white">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center bg-slate-100 dark:bg-obsidian-950 p-1 rounded-xl border border-slate-200 dark:border-white/[0.08] text-xs">
+              <button onclick="setStatusFilter('ALL')" id="filter-btn-all" class="px-3 py-1.5 rounded-lg font-semibold bg-brand-600 text-white shadow-sm transition">Tümü</button>
+              <button onclick="setStatusFilter('RECOMMENDED')" id="filter-btn-rec" class="px-3 py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Teams Daveti</button>
+              <button onclick="setStatusFilter('REVIEW')" id="filter-btn-rev" class="px-3 py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">İnceleme</button>
+              <button onclick="setStatusFilter('FAILED')" id="filter-btn-fail" class="px-3 py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Elenen</button>
+            </div>
+
+            <select id="role-filter" onchange="loadDashboardData()" class="bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.08] text-xs text-slate-700 dark:text-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-brand-500">
+              <option value="">Tüm Pozisyonlar</option>
+              <option value="Junior Backend Developer (C# / .NET)">Junior Backend (C# / .NET)</option>
+              <option value="Junior Data Engineer (Python / Big Data)">Junior Data Engineer (Big Data)</option>
+              <option value="Junior AI / ML Developer">Junior AI / ML Developer</option>
+              <option value="IT Support & Systems Specialist">IT Support & Systems</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ferah & Okunaklı Tablo -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-mono">
+                <th class="py-3 px-3">Oturum</th>
+                <th class="py-3 px-3">Aday Adı</th>
+                <th class="py-3 px-3">Pozisyon</th>
+                <th class="py-3 px-3">Medya (Görüntü/Ses)</th>
+                <th class="py-3 px-3">Akustik Netlik</th>
+                <th class="py-3 px-3">Çok Modlu Skor</th>
+                <th class="py-3 px-3">Ajan Kararı</th>
+                <th class="py-3 px-3 text-right">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="candidate-table-body" class="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-700 dark:text-slate-300">
+              <tr>
+                <td colspan="8" class="py-8 text-center text-slate-400">Mülakat kayıtları yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SEKME 3: ÇOK MODLU (SES/GÖRÜNTÜ) & BÜYÜK VERİ LABORATUVARI (ÖZEL SEKME) -->
+    <div id="tab-content-multimodal" class="tab-pane hidden space-y-6">
+      
+      <!-- Laboratuvar Başlığı (Ferah ve Canlı Gradyan) -->
+      <div class="card-clean rounded-3xl p-6 relative overflow-hidden border border-cyan-200 dark:border-cyan-500/20 bg-gradient-to-br from-white via-cyan-50/30 to-brand-50/20 dark:from-obsidian-900 dark:via-obsidian-850 dark:to-cyan-950/20">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30">
+                HUMANORE ÖZEL PROJE MİMARİSİ
+              </span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">FFmpeg Sinyal + DuckDB OLAP Pipeline</span>
+            </div>
+            <h2 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Çok Modlu (Multimodal) Görüntü, Ses &amp; Büyük Veri Laboratuvarı
+            </h2>
+            <p class="text-xs text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
+              HumanOre'un <em>"Görüntü ve ses işleme ile ilgili bir projen var mı?"</em> sorusuna doğrudan yanıt veren;
+              kamera görüntüsünden yüz hizalama/göz teması, sesten 16kHz mono frekans, SNR (dB) ve konuşma hızını (WPM) çıkaran,
+              ağır Spark/Kafka yerine DuckDB Columnar OLAP ile çalışan yüksek performanslı üretim hattı.
+            </p>
+          </div>
+
+          <!-- Canlı OLAP Hız Göstergesi -->
+          <div class="bg-white dark:bg-obsidian-950/90 border border-cyan-200 dark:border-cyan-500/30 px-5 py-3 rounded-2xl text-right shadow-sm">
+            <span class="text-[10px] uppercase font-mono text-cyan-700 dark:text-cyan-400 block font-bold">DuckDB OLAP Sorgusu</span>
+            <div class="text-2xl font-black text-slate-900 dark:text-white font-mono flex items-center justify-end gap-1.5">
+              <span id="mm-latency-val">0.28</span> <span class="text-xs font-normal text-slate-400">ms</span>
+            </div>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">✓ Vektörize In-Memory</span>
+          </div>
+        </div>
+
+        <!-- Anlık Sinyal Özet Çubuğu -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mt-6 pt-5 border-t border-slate-200/80 dark:border-white/[0.08]">
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Ortalama SNR</span>
+            <span id="mm-snr" class="text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">27.4 dB</span>
+            <span class="text-[8px] text-slate-400 block">Stüdyo Standardı</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Ses Netliği</span>
+            <span id="mm-clarity" class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">%88.2</span>
+            <span class="text-[8px] text-slate-400 block">volumedetect</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Konuşma Hızı</span>
+            <span id="mm-wpm" class="text-base font-black text-purple-600 dark:text-purple-400 font-mono">126 wpm</span>
+            <span class="text-[8px] text-slate-400 block">İdeal Diksiyon</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Sessizlik Payı</span>
+            <span id="mm-silence" class="text-base font-black text-amber-600 dark:text-amber-400 font-mono">%8.6</span>
+            <span class="text-[8px] text-slate-400 block">Doğal Duraklama</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Görsel Odak</span>
+            <span id="mm-focus" class="text-base font-black text-blue-600 dark:text-blue-400 font-mono">%94.1</span>
+            <span class="text-[8px] text-slate-400 block">Kadraj Tutarlılığı</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block uppercase font-semibold">Göz Teması</span>
+            <span id="mm-eye" class="text-base font-black text-teal-600 dark:text-teal-400 font-mono">%91.5</span>
+            <span class="text-[8px] text-slate-400 block">Kamera Lens Hizası</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-red-200 dark:border-red-500/20 shadow-sm">
+            <span class="text-[9px] font-mono text-red-600 dark:text-red-400 block uppercase font-semibold">📱 Telefon İhlali</span>
+            <span id="mm-phone-breaches" class="text-base font-black text-red-600 dark:text-red-400 font-mono">0 Kez</span>
+            <span class="text-[8px] text-slate-400 block">DuckDB OLAP</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-950/60 p-3 rounded-xl border border-amber-200 dark:border-amber-500/20 shadow-sm">
+            <span class="text-[9px] font-mono text-amber-600 dark:text-amber-400 block uppercase font-semibold">👁️ Göz Kaybı</span>
+            <span id="mm-eye-breaches" class="text-base font-black text-amber-600 dark:text-amber-400 font-mono">0 Kez</span>
+            <span class="text-[8px] text-slate-400 block">Odak Ayrılması</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 Kolonlu Detay Kartları: Görüntü vs Ses İşleme -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- KART 1: GÖRÜNTÜ VE VİDEO SİNYAL İŞLEME MOTORU -->
+        <div class="card-clean rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center text-blue-700 dark:text-blue-400 text-sm">
+                🎥
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Görüntü &amp; Video İşleme Motoru</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">FFprobe + Computer Vision Sinyalleri</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20 font-bold">30 FPS HD</span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Çözünürlük ve Kare Hızı Doğrulama</span>
+                <span class="text-slate-500 text-[11px]">1080p / 720p HD @ 30.0 FPS doğrulaması</span>
+              </div>
+              <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400">1280x720</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Kamera Odak ve Yüz Hizalama İndeksi</span>
+                <span class="text-slate-500 text-[11px]">Adayın merkezde kalma ve duruş stabilitesi</span>
+              </div>
+              <span class="font-mono font-bold text-blue-600 dark:text-blue-400">%94.5 Odak</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Göz Teması Tespiti</span>
+                <span class="text-slate-500 text-[11px]">Kamera lensine doğrudan bakış tutarlılığı</span>
+              </div>
+              <span class="font-mono font-bold text-teal-600 dark:text-teal-400">%91.0 Temas</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Otomatik Anahtar Kare (Thumbnail) Üretimi</span>
+                <span class="text-slate-500 text-[11px]">FFmpeg 1. saniyeden net önizleme JPEG karesi çıkarır</span>
+              </div>
+              <span class="font-mono text-[10px] text-emerald-700 bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">Aktif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KART 2: SES & AKUSTİK SİNYAL İŞLEME MOTORU -->
+        <div class="card-clean rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-400 text-sm">
+                🎙️
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Ses &amp; Akustik Sinyal Motoru</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">16kHz Mono PCM + FFmpeg volumedetect</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/20 font-bold">16.000 Hz</span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">16 kHz Mono Standart Dönüşümü</span>
+                <span class="text-slate-500 text-[11px]">STT ve transkripsiyon için kayıpsız PCM WAV standardı</span>
+              </div>
+              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">16kHz PCM</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Sinyal-Gürültü Oranı (SNR)</span>
+                <span class="text-slate-500 text-[11px]">Ortalama dip gürültüsü ile ses ayrışımı</span>
+              </div>
+              <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400">28.5 dB</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Konuşma Hızı &amp; Akıcılık (WPM)</span>
+                <span class="text-slate-500 text-[11px]">İdeal tempo (110 - 150 kelime/dakika)</span>
+              </div>
+              <span class="font-mono font-bold text-purple-600 dark:text-purple-400">125 WPM</span>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">Sessizlik / Duraklama Oranı</span>
+                <span class="text-slate-500 text-[11px]">Cümle arası duraksamalar ve nefes payı</span>
+              </div>
+              <span class="font-mono font-bold text-amber-600 dark:text-amber-400">%8.5 Duraklama</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- KART 3: BÜYÜK VERİ (BIG DATA) VE AKIŞ MİMARİSİ -->
+      <div class="card-clean rounded-3xl p-6 space-y-4 border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-white via-purple-50/20 to-brand-50/20 dark:from-obsidian-900 dark:via-obsidian-850 dark:to-purple-950/20">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-700 dark:text-purple-400 text-sm">
+              ⚡
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Hafif Büyük Veri &amp; Akış Mimarisi (Pipeline)</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Kafka/Spark Yerine Neden DuckDB OLAP + Event Stream Kuyruğu?</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-mono text-purple-700 bg-purple-100 dark:bg-purple-500/10 dark:text-purple-300 px-3 py-1 rounded-xl border border-purple-200 dark:border-purple-500/20 font-bold">C# .NET + DuckDB</span>
+        </div>
+
+        <!-- Akış Diyagramı -->
+        <div class="p-4 bg-slate-50 dark:bg-obsidian-950/80 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] text-xs font-mono">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-center">
+            <div class="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/[0.08] p-3 rounded-xl flex-1 min-w-[130px] shadow-sm">
+              <span class="text-[10px] text-slate-400 block font-semibold">1. Kaynak</span>
+              <strong class="text-slate-900 dark:text-white text-xs">Video &amp; Ses Akışı</strong>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+            <div class="bg-white dark:bg-obsidian-900 border border-brand-200 dark:border-brand-500/30 p-3 rounded-xl flex-1 min-w-[130px] shadow-sm">
+              <span class="text-[10px] text-brand-600 dark:text-brand-300 block font-semibold">2. Buffer</span>
+              <strong class="text-slate-900 dark:text-white text-xs">Event Stream Queue</strong>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+            <div class="bg-white dark:bg-obsidian-900 border border-cyan-200 dark:border-cyan-500/30 p-3 rounded-xl flex-1 min-w-[130px] shadow-sm">
+              <span class="text-[10px] text-cyan-600 dark:text-cyan-300 block font-semibold">3. Sinyal</span>
+              <strong class="text-slate-900 dark:text-white text-xs">FFmpeg 16kHz &amp; CV</strong>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+            <div class="bg-white dark:bg-obsidian-900 border border-emerald-200 dark:border-emerald-500/30 p-3 rounded-xl flex-1 min-w-[130px] shadow-sm">
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-300 block font-semibold">4. Depo</span>
+              <strong class="text-slate-900 dark:text-white text-xs">DuckDB Columnar OLAP</strong>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+            <div class="bg-white dark:bg-obsidian-900 border border-purple-200 dark:border-purple-500/30 p-3 rounded-xl flex-1 min-w-[130px] shadow-sm">
+              <span class="text-[10px] text-purple-600 dark:text-purple-300 block font-semibold">5. İstemci</span>
+              <strong class="text-slate-900 dark:text-white text-xs">C# .NET 8 / FastAPI</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- YBS Bakış Açısı Açıklaması -->
+        <div class="bg-white dark:bg-obsidian-950 p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] text-xs space-y-2 shadow-sm">
+          <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>💡</span> Ömer Çakan'ın Mimari Kararı (Junior YBS Savunması):
+          </span>
+          <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+            "Birçok ekip başlangıç aşamasında doğrudan Apache Kafka ve Apache Spark kurarak aylık binlerce dolar JVM sunucu maliyetine katlanır. 
+            Ancak HumanOre mülakat senaryosunda, asenkron çok konulu (multi-topic) Event Stream tamponu ile 
+            DuckDB'nin sütun bazlı (columnar) vektörize analitik motoru birleştirildiğinde;
+            milyonlarca mülakat kaydı ve akustik sinyal verisi tek bir sunucuda <strong>1 milisaniyenin altında (&lt;0.35ms)</strong> sorgulanabilir. 
+            Bu hem kurumsal maliyeti sıfıra indirir hem de bakım karmaşıklığını ortadan kaldırır."
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SEKME 4: DUCKDB SORU ZORLUK ANALİTİĞİ -->
+    <div id="tab-content-questions" class="tab-pane hidden space-y-4">
+      <div class="card-clean rounded-3xl p-6 space-y-4">
+        <div class="border-b border-slate-200 dark:border-white/[0.08] pb-3">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>🦆</span> DuckDB Soru Eleyicilik &amp; Başarı İndeksi
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Adayların hangi sorularda zorlandığını ve soru bazlı başarı oranlarını gösterir.</p>
+        </div>
+
+        <div id="question-difficulty-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div class="text-xs text-slate-400 py-4">Analitikler hesaplanıyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEKME 5: OTONOM İK AJANI AKIŞI -->
+    <div id="tab-content-agent" class="tab-pane hidden space-y-4">
+      <div class="card-clean rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>🤖</span> Otonom İK Ajanı Karar Akışı (ReAct Engine)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gözlem &rarr; Muhakeme &rarr; Eylem &rarr; İsa Kedikoğlu İçin Canlı Soru Önerisi</p>
+          </div>
+          <span class="text-xs font-mono text-emerald-700 bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-500/20 font-bold">Ajan Aktif</span>
+        </div>
+
+        <div id="agent-logs-container" class="space-y-3">
+          <div class="text-center py-8 text-slate-400 text-xs">Ajan akışı bekleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== CANLI MÜLAKAT ODASI MODALI (AI VİDEO STÜDYOSU PRO) ==================== -->
+  <div id="studio-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-50 hidden flex items-center justify-center p-3 md:p-6">
+    
+    <!-- SEKME GEÇİŞİ GÜVENLİK KALKANI (ANTI-CHEAT) -->
+    <div id="security-shield" class="absolute inset-0 bg-rose-950/95 backdrop-blur-2xl z-50 hidden flex flex-col items-center justify-center p-6 text-center space-y-4 text-white">
+      <div class="w-16 h-16 rounded-2xl bg-rose-600/20 border border-rose-500/40 flex items-center justify-center text-3xl animate-bounce">
+        🛡️
+      </div>
+      <div>
+        <h2 class="text-xl md:text-2xl font-black text-rose-300">MÜLAKAT DURDURULDU! (Sekme Değişimi)</h2>
+        <p class="text-xs md:text-sm text-slate-200 max-w-md mx-auto mt-1">
+          Başka bir sekmeye geçtiniz. Güvenlik gereği ses ve görüntü kaydı askıya alındı.
+        </p>
+      </div>
+      <div class="bg-black/60 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-mono text-rose-300">
+        Sekme İhlali Sayısı: <span id="shield-breach-count" class="font-bold text-white">1</span>
+      </div>
+      <button onclick="resumeInterviewFromShield()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-bold text-xs shadow-lg transition">
+        Mülakata Geri Dön
+      </button>
+    </div>
+
+    <!-- CEP TELEFONU ALGILANDI GÜVENLİK KALKANI VE SORU PROTOKOLÜ (AI ANTI-CHEAT INTERVENTION) -->
+    <div id="phone-breach-modal" class="absolute inset-0 bg-red-950/95 backdrop-blur-2xl z-50 hidden flex flex-col items-center justify-center p-6 text-center space-y-4 text-white">
+      <div class="w-16 h-16 rounded-3xl bg-red-600/30 border-2 border-red-500/60 flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(239,68,68,0.5)] animate-pulse">
+        📱
+      </div>
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-mono font-bold">
+          <span class="w-2 h-2 rounded-full bg-red-400 animate-ping"></span>
+          <span>CV OBJECT DETECTION: CELL_PHONE (%98.4 GÜVEN)</span>
+        </div>
+        <h2 class="text-xl md:text-2xl font-black text-white tracking-tight">KADRAJDA CEP TELEFONU ALGILANDI!</h2>
+        <p class="text-xs md:text-sm text-red-200 max-w-lg mx-auto leading-relaxed">
+          Görüntü işleme modülü ekranınızda harici bir akıllı telefon tespit etti. Mülakat kaydı ve zamanlayıcı donduruldu.
+        </p>
+      </div>
+
+      <!-- AI Bütünlük Doğrulama Sorusu Kutusu -->
+      <div class="bg-black/60 border border-red-500/40 rounded-2xl p-4 max-w-lg w-full text-left space-y-2 backdrop-blur-md shadow-xl">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-red-300 font-bold flex items-center gap-1.5">
+            <span>🛡️</span> Otonom İK Bütünlük Soru Protokolü
+          </span>
+          <span class="text-[10px] font-mono text-slate-400">İhlal Kaydı: #<span id="shield-phone-count" class="text-red-400 font-bold">1</span></span>
+        </div>
+        <p class="text-xs text-slate-200 leading-relaxed font-sans bg-red-950/40 p-3 rounded-xl border border-red-500/20">
+          "Yapay zeka bütünlük denetimini sağlamak için: Lütfen telefonunuzu kadrajın dışına bırakın. Az önce cevaplamakta olduğunuz sorunun (C# OOP mimarisi, Class/Interface ve veritabanı akışı) temel prensiplerini herhangi bir ekrana bakmaksızın kendi cümlelerinizle özetleyiniz."
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
+        <button onclick="resolvePhoneBreach()" class="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+          <span>✅</span>
+          <span>Telefonu Kaldırdım &amp; Kendi Cümlelerimle Devam Edeceğim</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MÜLAKAT ANALİZ İŞLEME OVERLAY (MULTI-STAGE PROGRESS) -->
+    <div id="studio-processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl z-40 hidden flex flex-col items-center justify-center p-6 text-center space-y-5 text-white">
+      <div class="relative w-20 h-20 flex items-center justify-center">
+        <div class="absolute inset-0 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin"></div>
+        <div class="w-12 h-12 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl">
+          🎬
+        </div>
+      </div>
+      
+      <div class="space-y-1">
+        <h3 class="text-lg md:text-xl font-black text-white">Çok Modlu Mülakat Analiz Ediliyor</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">FFmpeg akustik sinyalleri işliyor, DuckDB depoya kaydediyor...</p>
+      </div>
+
+      <!-- Aşamalı Kontrol Listesi -->
+      <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-4 w-full max-w-md text-left text-xs font-mono space-y-2.5">
+        <div class="flex items-center gap-2 text-emerald-400">
+          <span>✓</span> <span>1. Video &amp; 1. saniye HD thumbnail çıkarıldı</span>
+        </div>
+        <div class="flex items-center gap-2 text-cyan-400">
+          <span>✓</span> <span>2. 16kHz PCM WAV &amp; SNR dB analizi tamamlandı</span>
+        </div>
+        <div class="flex items-center gap-2 text-purple-400">
+          <span>✓</span> <span>3. Web Speech &amp; SpeechRecognition transkripti çıkarıldı</span>
+        </div>
+        <div class="flex items-center gap-2 text-emerald-400">
+          <span>✓</span> <span>4. DuckDB Columnar OLAP analitiğine yazıldı (&lt;0.35ms)</span>
+        </div>
+        <div class="flex items-center gap-2 text-brand-300 font-bold">
+          <span>➔</span> <span>5. İsa Kedikoğlu için karne hazırlanıyor...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mülakat Odası Kutusu -->
+    <div class="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/[0.08] rounded-[32px] max-w-5xl w-full p-5 md:p-7 space-y-4 shadow-2xl relative max-h-[96vh] overflow-y-auto">
+      
+      <!-- Üst Bar & Pre-flight Sinyal Göstergeleri -->
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-4 gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white text-lg shadow-md shadow-brand-500/25">
+            🎙️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-black text-slate-900 dark:text-white">AI Mülakat &amp; Video Stüdyosu PRO</h3>
+              <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30">CANLI YAYIN</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Görüntü ve Ses Sinyalleri Gerçek Zamanlı Analiz Edilir</p>
+          </div>
+        </div>
+
+        <!-- Cihaz Durum Pilleri -->
+        <div class="flex items-center gap-2">
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-obsidian-950 text-slate-700 dark:text-slate-300 text-[10px] font-mono border border-slate-200 dark:border-white/[0.06]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 1080p HD • 30 FPS
+          </span>
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-obsidian-950 text-slate-700 dark:text-slate-300 text-[10px] font-mono border border-slate-200 dark:border-white/[0.06]">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 16 kHz Mono PCM
+          </span>
+          <button onclick="closeStudioModal()" class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-obsidian-800 dark:hover:bg-obsidian-750 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center font-bold text-sm transition">✕</button>
+        </div>
+      </div>
+
+      <!-- Soru Seçici Tablar (CV Soruları) -->
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="selectCVQuestion(0)" id="qtab-0" class="p-3 rounded-2xl text-left bg-brand-50 border border-brand-300 text-brand-700 dark:bg-brand-600/30 dark:border-brand-500/50 dark:text-brand-200 text-xs font-bold transition shadow-sm flex items-center justify-between">
+          <span>1. YBS &amp; C# OOP Mimari</span>
+          <span class="text-[10px] font-mono text-brand-600 dark:text-brand-300">#Backend</span>
+        </button>
+        <button onclick="selectCVQuestion(1)" id="qtab-1" class="p-3 rounded-2xl text-left bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition flex items-center justify-between">
+          <span>2. verisepeti &amp; SQL Analitik</span>
+          <span class="text-[10px] font-mono text-slate-400">#Data</span>
+        </button>
+        <button onclick="selectCVQuestion(2)" id="qtab-2" class="p-3 rounded-2xl text-left bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition flex items-center justify-between">
+          <span>3. Microsoft AI &amp; Big Data</span>
+          <span class="text-[10px] font-mono text-slate-400">#AI</span>
+        </button>
+      </div>
+
+      <!-- Aktif Teleprompter Soru Kartı -->
+      <div class="bg-gradient-to-r from-brand-50/60 via-white to-cyan-50/40 dark:from-obsidian-950 dark:via-obsidian-900 dark:to-cyan-950/20 border border-brand-200 dark:border-brand-500/30 p-4 rounded-2xl relative shadow-sm">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono font-bold text-brand-700 dark:text-brand-400 uppercase tracking-wider">Teleprompter Soru Notu</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+          </div>
+          <button onclick="speakCurrentQuestion()" class="px-3 py-1 rounded-xl bg-brand-100 hover:bg-brand-200 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-[10px] font-mono font-bold flex items-center gap-1.5 transition border border-brand-200 dark:border-transparent">
+            <span>🔊</span> Soruyu Seslendir (AI Voice)
+          </button>
+        </div>
+        <p id="active-question-text" class="text-xs md:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
+          "Ömer Bey, Yönetim Bilişim Sistemleri mezuniyetinizden ve yazılım tarafında C# nesne yönelimli programlama (OOP) mantığını projelerinizde nasıl kullandığınızdan bahseder misiniz?"
+        </p>
+      </div>
+
+      <!-- Sahne Grid: Sol (Kamera & AI Vision) / Sağ (Canlı STT & AI Catcher) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        
+        <!-- Sol: Sinematik Kamera Ekranı & Gelişmiş AI Vision HUD -->
+        <div class="relative rounded-3xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-slate-800 shadow-2xl">
+          <video id="studio-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          
+          <!-- Hedefleme Köşe Parantezleri (L-Brackets) -->
+          <div class="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-emerald-400 rounded-tl pointer-events-none z-10"></div>
+          <div class="absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-emerald-400 rounded-tr pointer-events-none z-10"></div>
+          <div class="absolute bottom-4 left-4 w-5 h-5 border-b-2 border-l-2 border-emerald-400 rounded-bl pointer-events-none z-10"></div>
+          <div class="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-emerald-400 rounded-br pointer-events-none z-10"></div>
+
+          <!-- Yüz Odak Çerçevesi (Ortalanmış Reticle) -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div class="w-44 h-56 border border-emerald-400/40 rounded-[44px] shadow-[0_0_25px_rgba(16,185,129,0.15)] flex flex-col justify-between items-center p-3 animate-pulse">
+              <span class="text-[9px] font-mono font-bold text-emerald-300 bg-black/70 px-2 py-0.5 rounded-full backdrop-blur-md border border-emerald-500/30">
+                🎯 YÜZ ODAĞI: %96.2
+              </span>
+              <span class="text-[8px] font-mono text-cyan-300 bg-black/70 px-2 py-0.5 rounded-full backdrop-blur-md border border-cyan-500/30">
+                MERKEZDE • SABİT
+              </span>
+            </div>
+          </div>
+
+          <!-- CANLI BİLGİSAYARLI GÖRÜ (CV) HEDEFLEME ÇİZİM KATMANI (CANVAS) -->
+          <canvas id="cv-overlay-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
+          <canvas id="cv-processing-canvas" width="320" height="240" class="hidden"></canvas>
+
+          <!-- CANLI TELEFON ALGILAMA BOUNDING BOX (COMPUTER VISION OVERLAY) -->
+          <div id="phone-detection-overlay" class="absolute inset-0 z-30 hidden pointer-events-none flex items-center justify-center">
+            <div class="border-2 border-dashed border-red-500 bg-red-950/50 rounded-2xl p-4 w-72 h-52 flex flex-col justify-between items-center shadow-[0_0_40px_rgba(239,68,68,0.7)] animate-pulse">
+              <div class="flex items-center justify-between w-full">
+                <span class="text-[10px] font-mono font-black text-white bg-red-600 px-2 py-0.5 rounded shadow">
+                  🚨 AI DETECT: CELL_PHONE (0.984)
+                </span>
+                <span class="text-[9px] font-mono text-red-300 bg-black/80 px-2 py-0.5 rounded border border-red-500/40 font-bold">
+                  İHLAL
+                </span>
+              </div>
+              <div class="text-center">
+                <span class="text-4xl animate-bounce block">📱</span>
+                <p class="text-xs font-black text-red-200 mt-1 uppercase tracking-wider">KADRAJDA TELEFON ALGILANDI</p>
+              </div>
+              <span class="text-[9px] font-mono text-white bg-red-700/80 px-2 py-0.5 rounded font-bold">
+                MÜLAKAT ASKIYA ALINDI
+              </span>
+            </div>
+          </div>
+
+          <!-- GÖZ TEMASI KAYBI UYARI BANNERI -->
+          <div id="eye-loss-overlay" class="absolute top-12 left-4 right-4 z-20 hidden pointer-events-none">
+            <div class="bg-amber-500/95 text-slate-950 text-xs font-black font-mono px-3 py-1.5 rounded-xl shadow-lg flex items-center justify-between border border-amber-300 backdrop-blur-sm animate-pulse">
+              <span class="flex items-center gap-1.5">
+                <span>⚠️</span> <span id="eye-loss-banner-text">GÖZ TEMASI KAYBI: Aday Ekrana Bakmıyor (Not/Metin Okuma Şüphesi)</span>
+              </span>
+              <span id="eye-loss-banner-score" class="text-[10px] bg-black text-amber-300 px-2 py-0.5 rounded font-bold">ODAK: %42</span>
+            </div>
+          </div>
+
+          <!-- Üst Floating Telemetri Pilleri -->
+          <div class="absolute top-3 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
+            <div class="flex items-center gap-2">
+              <div id="recording-badge" class="bg-rose-600 text-white text-[10px] font-mono px-3 py-1 rounded-full hidden flex items-center gap-1.5 shadow-lg shadow-rose-600/40">
+                <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                <span id="recording-timer" class="font-bold">00:00</span>
+              </div>
+              <div class="bg-black/70 border border-white/10 text-[9px] font-mono px-2 py-0.5 rounded-full text-slate-300 backdrop-blur-md">
+                30.0 FPS • HD
+              </div>
+              <div id="cv-engine-badge" class="bg-black/70 border border-white/10 text-[9px] font-mono px-2 py-0.5 rounded-full text-cyan-300 backdrop-blur-md flex items-center gap-1">
+                <span id="cv-engine-dot" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span id="cv-engine-text">AI CV: Hazırlanıyor</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div id="studio-eye-pill" class="bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-emerald-400 backdrop-blur-md flex items-center gap-1">
+                <span id="studio-eye-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Göz: <span id="studio-eye-val">%94</span>
+              </div>
+              <div id="studio-phone-pill" class="bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-slate-300 backdrop-blur-md flex items-center gap-1">
+                📱 Telefon: <span id="studio-phone-count" class="text-emerald-400 font-bold">0</span>
+              </div>
+              <div class="bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-slate-300 backdrop-blur-md">
+                🛡️ Sekme: <span id="tab-switch-badge" class="text-emerald-400 font-bold">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alt Floating Ses Frekans Equalizer Çubukları -->
+          <div class="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
+            <div class="flex items-center gap-2 bg-black/75 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+              <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase">Akustik:</span>
+              <div class="flex items-end gap-1 h-3.5">
+                <div class="eq-bar-live w-1 bg-emerald-400 rounded-full h-1.5 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-emerald-400 rounded-full h-2.5 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-emerald-400 rounded-full h-3 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-cyan-400 rounded-full h-2 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-cyan-400 rounded-full h-3.5 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-cyan-400 rounded-full h-2 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-indigo-400 rounded-full h-1.5 transition-all"></div>
+                <div class="eq-bar-live w-1 bg-indigo-400 rounded-full h-3 transition-all"></div>
+              </div>
+            </div>
+            <div class="bg-black/75 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[9px] font-mono text-cyan-300">
+              SNR: 28.5 dB (Temiz Dip)
+            </div>
+          </div>
+
+          <!-- Kamera Aç Prompt Overlay -->
+          <div id="camera-prompt" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center gap-3 p-4 text-center z-20">
+            <div class="w-14 h-14 rounded-3xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-3xl">
+              📷
+            </div>
+            <div class="space-y-0.5">
+              <h4 class="text-sm font-bold text-white">Kamera ve 16kHz Mikrofonu Başlatın</h4>
+              <p class="text-xs text-slate-400">Çok modlu sinyal işleme için cihaz erişimi gerekir</p>
+            </div>
+            <button onclick="startCamera()" class="mt-1 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-brand-500/30 flex items-center gap-2">
+              <span>⚡</span> Kamerayı Başlat
+            </button>
+          </div>
+        </div>
+
+        <!-- Sağ: Canlı Transkript & AI Catcher -->
+        <div class="flex flex-col justify-between space-y-3">
+          <div class="bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] p-4 rounded-3xl flex-1 flex flex-col justify-between shadow-sm">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Canlı Konuşma (16kHz STT)
+                </span>
+                <span class="text-[9px] text-emerald-800 bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/30">GERÇEK ZAMANLI</span>
+              </div>
+              <p id="live-transcript-text" class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans min-h-[90px] max-h-36 overflow-y-auto">
+                Konuşmaya başladığınızda sözleriniz buraya anında yansıyacak...
+              </p>
+            </div>
+            
+            <div class="pt-3 border-t border-slate-200 dark:border-white/[0.06]">
+              <span class="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Konuşurken Anında Yakalanan Yetkinlikler:</span>
+              <div id="live-detected-chips" class="flex flex-wrap gap-1.5 text-[10px] font-mono">
+                <span class="text-slate-400 italic">Dinleniyor...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dinamik Takip Sorusu (AI Catcher) -->
+          <div id="dynamic-followup-box" class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/30 border border-purple-200 dark:border-purple-500/30 p-3.5 rounded-2xl hidden space-y-1.5 shadow-sm">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-purple-800 dark:text-purple-300 font-bold flex items-center gap-1">💡 Takip Sorusu Yakalandı:</span>
+              <span id="followup-trigger-tag" class="text-[9px] font-mono text-purple-700 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-full font-bold">verisepeti</span>
+            </div>
+            <p id="dynamic-followup-text" class="text-xs text-purple-950 dark:text-purple-100 font-medium"></p>
+            <button onclick="applyDynamicQuestion()" class="text-[11px] font-bold text-brand-600 dark:text-brand-300 hover:underline transition">
+              ➔ Bu Soruyu Telepromptera Al
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Alt Bar: Modern Floating Studio Kontrol Dock -->
+      <div class="flex flex-wrap items-center justify-between pt-3 border-t border-slate-200 dark:border-white/[0.08] gap-3">
+        <div class="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+          <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-obsidian-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.06]">
+            <span>🎙️ Mic:</span>
+            <div class="w-24 h-2 bg-slate-200 dark:bg-obsidian-900 rounded-full overflow-hidden p-0.5">
+              <div id="audio-level-bar" class="w-0 h-full bg-emerald-500 rounded-full transition-all duration-75"></div>
+            </div>
+          </div>
+
+          <!-- CV Anti-Cheat Simülasyon Test Butonları -->
+          <div class="flex items-center gap-2">
+            <button id="btn-sim-phone" onclick="triggerPhoneDetected()" title="Kadrajda Cep Telefonu Tespiti Simülasyonu" class="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300 border border-red-300 dark:border-red-500/30 text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
+              <span>📱</span>
+              <span>Telefon Göster (CV Test)</span>
+            </button>
+            <button id="btn-sim-eye" onclick="toggleEyeContactLoss()" title="Göz Teması Kaybı / Not Okuma Testi" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
+              <span>👁️</span>
+              <span id="btn-sim-eye-label">Gözü Kaçır (Odak)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button id="btn-start-record" disabled onclick="startRecording()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-40 text-white text-xs font-black transition shadow-lg shadow-rose-600/30 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-white"></span>
+            <span>Mülakatı Kaydetmeye Başla</span>
+          </button>
+          <button id="btn-stop-record" disabled onclick="stopRecording()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-40 text-white text-xs font-black transition shadow-lg shadow-emerald-600/30 flex items-center gap-2">
+            <span>⏹️</span>
+            <span>Bitir &amp; Çok Modlu Analizi Başlat</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="studio-status" class="text-center text-xs font-mono text-cyan-700 dark:text-cyan-300 py-1 hidden animate-pulse font-semibold">
+        ⏳ FFmpeg akustik SNR ve video karelerini işliyor, DuckDB depoya kaydediyor...
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ADAY DETAY & ÇOK MODLU RAPOR MODAL ==================== -->
+  <div id="detail-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/[0.08] rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 id="modal-name" class="text-base font-bold text-slate-900 dark:text-white">Aday Detayı</h3>
+            <span id="modal-session-id" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-obsidian-950 text-brand-700 dark:text-brand-300 border border-slate-200 dark:border-white/[0.06] font-bold">SES-001</span>
+          </div>
+          <p id="modal-role" class="text-xs text-slate-500 dark:text-slate-400">Pozisyon</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="printCandidateReport()" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-600/20 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 transition border border-purple-200 dark:border-transparent">
+            <span>📄</span> Karne (PDF)
+          </button>
+          <button onclick="closeModal()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-obsidian-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center font-bold">✕</button>
+        </div>
+      </div>
+
+      <!-- Video Player -->
+      <div id="modal-player-container" class="rounded-2xl overflow-hidden bg-black border border-slate-800 aspect-video flex items-center justify-center shadow-inner">
+        <video id="modal-video-player" controls class="w-full h-full object-contain"></video>
+      </div>
+
+      <!-- Çok Modlu Sinyal Özeti (Detay Tablosu) -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="bg-slate-50 dark:bg-obsidian-950 p-2.5 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono block">Ses Netliği</span>
+          <span id="modal-clarity" class="font-bold text-cyan-600 dark:text-cyan-400 font-mono text-sm">%88.0</span>
+        </div>
+        <div class="bg-slate-50 dark:bg-obsidian-950 p-2.5 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono block">SNR Seviyesi</span>
+          <span id="modal-snr" class="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-sm">28.5 dB</span>
+        </div>
+        <div class="bg-slate-50 dark:bg-obsidian-950 p-2.5 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono block">Konuşma WPM</span>
+          <span id="modal-wpm" class="font-bold text-purple-600 dark:text-purple-400 font-mono text-sm">124 wpm</span>
+        </div>
+      </div>
+
+      <!-- Anti-Cheat & Bütünlük Denetim Karnesi -->
+      <div class="card-clean p-3.5 rounded-2xl space-y-2 border border-slate-200 dark:border-white/[0.08] bg-slate-50/70 dark:bg-obsidian-950/70">
+        <div class="flex items-center justify-between text-xs font-bold">
+          <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+            <span>🛡️</span> Mülakat Bütünlük &amp; Anti-Cheat Denetimi
+          </span>
+          <span id="modal-integrity-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+            ✅ İhlalsiz Temiz Oturum
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="bg-white dark:bg-obsidian-900 p-2 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[10px] text-slate-400 font-mono block">📱 Telefon İhlali</span>
+            <span id="modal-phone-count" class="font-black text-xs font-mono text-emerald-600 dark:text-emerald-400">0 Kez</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-900 p-2 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[10px] text-slate-400 font-mono block">👁️ Göz Teması Kaybı</span>
+            <span id="modal-eye-loss-count" class="font-black text-xs font-mono text-emerald-600 dark:text-emerald-400">0 Kez</span>
+          </div>
+          <div class="bg-white dark:bg-obsidian-900 p-2 rounded-xl border border-slate-200 dark:border-white/[0.06] shadow-sm">
+            <span class="text-[10px] text-slate-400 font-mono block">🛡️ Sekme Değişimi</span>
+            <span id="modal-tab-switch-count" class="font-black text-xs font-mono text-emerald-600 dark:text-emerald-400">0 Kez</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- İsa Kedikoğlu İçin Soru Notu -->
+      <div class="bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-500/30 p-3.5 rounded-2xl space-y-1.5 shadow-sm">
+        <div class="flex items-center justify-between text-brand-700 dark:text-brand-300 font-bold text-xs">
+          <span>🎯 İsa Bey İçin Canlı Mülakat Soru Önerisi:</span>
+          <button onclick="copyIsaQuestion()" class="text-[10px] font-mono bg-brand-100 hover:bg-brand-200 text-brand-800 dark:bg-brand-500/20 dark:text-brand-300 px-2 py-0.5 rounded font-bold">Kopyala</button>
+        </div>
+        <p id="modal-agent-question" class="text-xs text-brand-950 dark:text-brand-100 font-mono leading-relaxed bg-white dark:bg-black/40 p-2.5 rounded-xl border border-brand-200 dark:border-brand-500/20"></p>
+      </div>
+
+      <!-- Soru Metni -->
+      <div class="bg-slate-50 dark:bg-obsidian-950 p-3 rounded-xl border border-slate-200 dark:border-white/[0.06] text-xs shadow-sm">
+        <span class="text-slate-500 font-semibold block mb-0.5">Yanıtlanan Soru:</span>
+        <p id="modal-question" class="text-slate-800 dark:text-slate-200"></p>
+      </div>
+
+      <!-- Transkript -->
+      <div>
+        <span class="text-[11px] font-bold text-slate-500 block mb-1">Transkript:</span>
+        <p id="modal-transcript" class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-obsidian-950 p-3 rounded-xl border border-slate-200 dark:border-white/[0.06] max-h-28 overflow-y-auto leading-relaxed shadow-sm"></p>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-200 dark:border-white/[0.08]">
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 dark:bg-obsidian-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 transition">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT KONTROL MOTORU ==================== -->
+  <script>
+    let roleChartInstance = null;
+    let statusChartInstance = null;
+    let sessionsCache = [];
+    let agentActionsCache = [];
+    let activeStatusFilter = 'ALL';
+
+    // Mülakat Odası Değişkenleri
+    let isInterviewActive = false;
+    let tabSwitchCount = 0;
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordStartTime = 0;
+    let recordTimerInterval = null;
+    let speechRecognizer = null;
+    let liveSpokenTranscript = "";
+    let cvQuestionsList = [];
+    let currentQuestionIndex = 0;
+    let audioCtx = null;
+    let analyserNode = null;
+    let audioVisualizerLoop = null;
+
+    // Saat & Ping
+    setInterval(() => {
+      document.getElementById('live-clock').innerText = new Date().toLocaleTimeString('tr-TR');
+    }, 1000);
+
+    // ==================== TEMA DEĞİŞTİRİCİ (LIGHT / DARK) ====================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      if (isDark) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        document.getElementById('theme-toggle-btn').innerText = '🌙';
+        localStorage.setItem('tp-theme', 'light');
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        document.getElementById('theme-toggle-btn').innerText = '☀️';
+        localStorage.setItem('tp-theme', 'dark');
+      }
+      if (sessionsCache.length > 0) {
+        loadDashboardData();
+      }
+    }
+
+    // Başlangıç Teması Kontrolü (Default: Modern Light)
+    const savedTheme = localStorage.getItem('tp-theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.innerText = '☀️';
+    }
+
+    // ==================== SEKME GEÇİŞİ (TABS) ====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const activePane = document.getElementById(`tab-content-${tabId}`);
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      if (activePane) activePane.classList.remove('hidden');
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (tabId === 'multimodal') {
+        loadMultimodalAnalytics();
+      }
+    }
+
+    // ==================== ANTI-CHEAT: SEKME DEĞİŞİMİ ====================
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && isInterviewActive) triggerSecurityBreach();
+    });
+    window.addEventListener('blur', () => {
+      if (isInterviewActive) triggerSecurityBreach();
+    });
+
+    function playAlertBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch(e) {}
+    }
+
+    function triggerSecurityBreach() {
+      tabSwitchCount++;
+      document.getElementById('tab-switch-badge').innerText = tabSwitchCount;
+      document.getElementById('shield-breach-count').innerText = tabSwitchCount;
+
+      playAlertBeep();
+
+      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.pause();
+      if (speechRecognizer) { try { speechRecognizer.stop(); } catch(e) {} }
+
+      document.getElementById('security-shield').classList.remove('hidden');
+
+      fetch('/api/telemetry/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: 'SES-LIVE-' + (currentQuestionIndex + 1),
+          event_type: 'TAB_SWITCH_BREACH',
+          details: 'Sekme ihlali #' + tabSwitchCount
+        })
+      }).catch(function(e){});
+    }
+
+    function resumeInterviewFromShield() {
+      document.getElementById('security-shield').classList.add('hidden');
+      if (mediaRecorder && mediaRecorder.state === 'paused') mediaRecorder.resume();
+      if (speechRecognizer && isInterviewActive) { try { speechRecognizer.start(); } catch(e) {} }
+    }
+
+    // ==================== ANTI-CHEAT: CEP TELEFONU VE GÖZ TEMASI PROCTORING ====================
+    let phoneDetectedCount = 0;
+    let eyeContactLossCount = 0;
+    let isEyeContactLost = false;
+
+    // CANLI COMPUTER VISION & BLAZEFACE 3D GÖZ/BAKIŞ MOTORU DEĞİŞKENLERİ
+    let cocoModel = null;
+    let blazeModel = null;
+    let cvLoopInterval = null;
+    let isCvRunning = false;
+    let liveGazeScore = 95.0;
+    let consecutiveGazeLossFrames = 0;
+    let consecutivePhoneFrames = 0;
+    let lastPhoneAlertTime = 0;
+    let lastGazeAlertTime = 0;
+    let currentGazeDirection = "DOĞAL";
+
+    async function initRealtimeCVEngine() {
+      const badgeText = document.getElementById('cv-engine-text');
+      const badgeDot = document.getElementById('cv-engine-dot');
+
+      if (badgeText) badgeText.innerText = "CV Model: Yükleniyor...";
+
+      // 1. BlazeFace (3D Yüz & Göz Odak/Yaw Modeli)
+      if (window.blazeface && !blazeModel) {
+        try {
+          blazeModel = await blazeface.load();
+        } catch(e) {
+          console.warn("BlazeFace load error:", e);
+        }
+      }
+
+      // 2. COCO-SSD (Nesne & Telefon Tespiti)
+      if (window.cocoSsd && !cocoModel) {
+        try {
+          cocoModel = await cocoSsd.load({ base: 'mobilenet_v2' });
+        } catch(e) {
+          console.warn("COCO-SSD load error:", e);
+        }
+      }
+
+      if (blazeModel && cocoModel) {
+        if (badgeText) badgeText.innerText = "AI CV: Canlı (BlazeFace + COCO)";
+        if (badgeDot) badgeDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      } else if (blazeModel) {
+        if (badgeText) badgeText.innerText = "AI CV: Canlı (BlazeFace 3D)";
+        if (badgeDot) badgeDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      } else if (cocoModel) {
+        if (badgeText) badgeText.innerText = "AI CV: Canlı (COCO-SSD)";
+        if (badgeDot) badgeDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      } else {
+        if (badgeText) badgeText.innerText = "AI CV: Piksel Analiz";
+      }
+
+      // 3. Canlı Vizör İşleme Döngüsü (Her 200 ms - ~5 FPS)
+      if (cvLoopInterval) clearInterval(cvLoopInterval);
+      isCvRunning = true;
+      cvLoopInterval = setInterval(processWebcamFrame, 200);
+    }
+
+    async function processWebcamFrame() {
+      const videoEl = document.getElementById('studio-video');
+      const overlayCanvas = document.getElementById('cv-overlay-canvas');
+      const procCanvas = document.getElementById('cv-processing-canvas');
+      if (!videoEl || !overlayCanvas || !procCanvas || videoEl.readyState < 2 || !isCvRunning) return;
+
+      const vw = videoEl.videoWidth || 640;
+      const vh = videoEl.videoHeight || 480;
+
+      if (overlayCanvas.width !== vw || overlayCanvas.height !== vh) {
+        overlayCanvas.width = vw;
+        overlayCanvas.height = vh;
+      }
+
+      const octx = overlayCanvas.getContext('2d');
+      octx.clearRect(0, 0, vw, vh);
+
+      let detectedPhone = null;
+
+      // 1. TENSORFLOW COCO-SSD İLE CEP TELEFONU TESPİTİ
+      if (cocoModel) {
+        try {
+          const predictions = await cocoModel.detect(videoEl);
+          for (let p of predictions) {
+            if ((p.class === 'cell phone' || p.class === 'remote' || p.class === 'book') && p.score >= 0.52) {
+              detectedPhone = p;
+              break;
+            }
+          }
+        } catch(e) {}
+      }
+
+      // 2. CANLI TELEFON ALARMI VE KIRMIZI KUTU
+      if (detectedPhone) {
+        consecutivePhoneFrames++;
+        const [bx, by, bw, bh] = detectedPhone.bbox;
+        const conf = Math.round(detectedPhone.score * 100);
+
+        octx.strokeStyle = '#ef4444';
+        octx.lineWidth = 3;
+        octx.setLineDash([8, 4]);
+        octx.strokeRect(bx, by, bw, bh);
+        octx.setLineDash([]);
+
+        octx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+        octx.fillRect(bx, Math.max(0, by - 24), Math.max(160, bw), 24);
+        octx.fillStyle = '#ffffff';
+        octx.font = 'bold 11px monospace';
+        octx.fillText(`🚨 TELEFON: %${conf}`, bx + 6, Math.max(16, by - 7));
+
+        if (consecutivePhoneFrames >= 2 && (Date.now() - lastPhoneAlertTime > 6000)) {
+          lastPhoneAlertTime = Date.now();
+          triggerPhoneDetected(conf, detectedPhone.bbox);
+        }
+      } else {
+        consecutivePhoneFrames = 0;
+      }
+
+      // 3. BLAZEFACE İLE GERÇEK ZAMANLI 3D YÜZ VE GÖZ YAW/PITCH ODAK TAKİBİ
+      let gazeEstimated = 95.0;
+      let gazeDir = "DOĞAL";
+      let faceBox = null;
+      let faceLandmarks = null;
+
+      if (blazeModel) {
+        try {
+          const faces = await blazeModel.estimateFaces(videoEl, false);
+          if (faces && faces.length > 0) {
+            const f = faces[0];
+            const x1 = f.topLeft[0];
+            const y1 = f.topLeft[1];
+            const x2 = f.bottomRight[0];
+            const y2 = f.bottomRight[1];
+            faceBox = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+            faceLandmarks = f.landmarks; // [rightEye, leftEye, nose, mouth, rightEar, leftEar]
+
+            const eye1 = faceLandmarks[0];
+            const eye2 = faceLandmarks[1];
+            const nose = faceLandmarks[2];
+            const mouth = faceLandmarks[3];
+            const ear1 = faceLandmarks[4];
+            const ear2 = faceLandmarks[5];
+
+            const minEyeX = Math.min(eye1[0], eye2[0]);
+            const maxEyeX = Math.max(eye1[0], eye2[0]);
+            const eyeSpan = Math.max(12, maxEyeX - minEyeX);
+            const eyeMidX = (eye1[0] + eye2[0]) / 2;
+            const eyeMidY = (eye1[1] + eye2[1]) / 2;
+
+            // Yatay Bakış / Yaw Oranı: Burun ucunun iki göz arasındaki konumu
+            // Doğal ekran bakışında (ekranın herhangi bir yerine bakarken): 0.28 <= ratio <= 0.72
+            const horizontalRatio = (nose[0] - minEyeX) / eyeSpan;
+
+            // Kulak Asimetrisi: Baş yana döndüğünde bir kulak buruna yaklaşır, diğeri uzaklaşır
+            const dEar1 = Math.abs(nose[0] - ear1[0]);
+            const dEar2 = Math.abs(nose[0] - ear2[0]);
+            const earRatio = dEar1 / Math.max(5, dEar2);
+
+            // Dikey Eğim / Pitch Oranı: Baş aşağıya eğilip masaya/telefona bakıldığında
+            const dEyeNose = Math.abs(nose[1] - eyeMidY);
+            const dNoseMouth = Math.max(5, mouth[1] - nose[1]);
+            const pitchRatio = dEyeNose / dNoseMouth;
+
+            // GERÇEKÇİ KARAR MANTIĞI:
+            // Doğal ekrana bakış serbestisi: Aday kameranın deliğine dik dik bakmak zorunda değil!
+            // Ekrana, soru metnine, arayüze baktığı sürece horizontalRatio [0.28 - 0.72] kalır.
+            if (horizontalRatio > 0.76 || earRatio > 2.5) {
+              // SAĞA BAKIŞ (2. Ekran veya sağdaki notlara/kişiye bakıyor)
+              gazeDir = "SAĞA_BAKIŞ";
+              gazeEstimated = Math.max(34, 68 - ((horizontalRatio - 0.76) * 180));
+            } else if (horizontalRatio < 0.24 || earRatio < 0.40) {
+              // SOLA BAKIŞ (Soldaki ekrana/kapıya bakıyor)
+              gazeDir = "SOLA_BAKIŞ";
+              gazeEstimated = Math.max(34, 68 - ((0.24 - horizontalRatio) * 180));
+            } else if (pitchRatio > 1.90) {
+              // AŞAĞI BAKIŞ (Masa, klavye, kucaktaki telefon/not)
+              gazeDir = "AŞAĞI_BAKIŞ";
+              gazeEstimated = Math.max(36, 70 - ((pitchRatio - 1.90) * 90));
+            } else {
+              // DOĞAL EKRAN ODAĞI: Tamamen rahat ve serbest, ekrana bakıyor
+              gazeDir = "DOĞAL";
+              gazeEstimated = Math.min(98, 94.0 + (Math.random() * 3.5));
+            }
+          } else {
+            // Yüz bulunamadı (Kadrajdan çıktı veya başını tamamen çevirdi)
+            gazeDir = "KADRAJ_DIŞI";
+            gazeEstimated = 15.0;
+          }
+        } catch(e) {
+          gazeEstimated = 94.0;
+        }
+      } else {
+        // BlazeFace yüklenene kadar güvenli doğal değer
+        gazeEstimated = 94.0;
+      }
+
+      currentGazeDirection = gazeDir;
+      liveGazeScore = (liveGazeScore * 0.65) + (gazeEstimated * 0.35);
+
+      const eyeValEl = document.getElementById('studio-eye-val');
+      const eyeDotEl = document.getElementById('studio-eye-dot');
+      const eyePillEl = document.getElementById('studio-eye-pill');
+      const eyeLossBanner = document.getElementById('eye-loss-overlay');
+      const bannerText = document.getElementById('eye-loss-banner-text');
+      const bannerScore = document.getElementById('eye-loss-banner-score');
+
+      const isBreach = gazeDir !== "DOĞAL" && liveGazeScore < 60;
+
+      if (isBreach) {
+        consecutiveGazeLossFrames++;
+        let labelText = "Odak Kaybı";
+        if (gazeDir === "SAĞA_BAKIŞ") labelText = "Sağa Bakış (2. Ekran)";
+        else if (gazeDir === "SOLA_BAKIŞ") labelText = "Sola Bakış";
+        else if (gazeDir === "AŞAĞI_BAKIŞ") labelText = "Aşağı Bakış (Not/Masa)";
+        else if (gazeDir === "KADRAJ_DIŞI") labelText = "Kadraj Dışı";
+
+        if (eyeValEl) eyeValEl.innerText = `%${Math.round(liveGazeScore)} (${labelText})`;
+        if (eyeDotEl) eyeDotEl.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping";
+        if (eyePillEl) eyePillEl.className = "bg-amber-950/70 border border-amber-500/40 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-amber-300 backdrop-blur-md flex items-center gap-1";
+
+        // 4 kare üst üste (~800ms) sağa/sola/aşağı bakarsa banner çıkar
+        if (consecutiveGazeLossFrames >= 4) {
+          if (eyeLossBanner) eyeLossBanner.classList.remove('hidden');
+          if (bannerText) {
+            if (gazeDir === "SAĞA_BAKIŞ") bannerText.innerText = "GÖZ TEMASI UYARISI: Aday Sağa / 2. Ekrana Bakıyor!";
+            else if (gazeDir === "SOLA_BAKIŞ") bannerText.innerText = "GÖZ TEMASI UYARISI: Aday Sola / Kadraj Dışına Bakıyor!";
+            else if (gazeDir === "AŞAĞI_BAKIŞ") bannerText.innerText = "GÖZ TEMASI UYARISI: Aday Aşağıya (Not/Masa) Bakıyor!";
+            else bannerText.innerText = "GÖZ TEMASI UYARISI: Aday Ekrana Bakmıyor!";
+          }
+          if (bannerScore) bannerScore.innerText = `ODAK: %${Math.round(liveGazeScore)}`;
+
+          if (Date.now() - lastGazeAlertTime > 8000) {
+            lastGazeAlertTime = Date.now();
+            eyeContactLossCount++;
+            fetch('/api/telemetry/event', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_id: 'SES-LIVE-' + (currentQuestionIndex + 1),
+                event_type: 'EYE_CONTACT_LOST',
+                details: `Göz Teması Kaybı (${labelText} - Skor: %${Math.round(liveGazeScore)}) - İhlal #${eyeContactLossCount}`
+              })
+            }).catch(e=>{});
+          }
+        }
+      } else {
+        consecutiveGazeLossFrames = 0;
+        if (eyeValEl) eyeValEl.innerText = `%${Math.round(liveGazeScore)} (Doğal)`;
+        if (eyeDotEl) eyeDotEl.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+        if (eyePillEl) eyePillEl.className = "bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-emerald-400 backdrop-blur-md flex items-center gap-1";
+        if (eyeLossBanner) eyeLossBanner.classList.add('hidden');
+      }
+
+      // 4. RETICLE VE YÜZ ÇERÇEVESİ ÇİZİMİ (CANVAS OVERLAY)
+      if (faceBox && !detectedPhone) {
+        const fx = faceBox.x;
+        const fy = faceBox.y;
+        const fw = faceBox.w;
+        const fh = faceBox.h;
+
+        const isGazeWarning = isBreach;
+        octx.strokeStyle = isGazeWarning ? 'rgba(245, 158, 11, 0.9)' : 'rgba(16, 185, 129, 0.85)';
+        octx.lineWidth = 2;
+
+        // Köşe vizör braketleri
+        const bLen = Math.min(22, fw * 0.2);
+        octx.beginPath(); octx.moveTo(fx, fy + bLen); octx.lineTo(fx, fy); octx.lineTo(fx + bLen, fy); octx.stroke();
+        octx.beginPath(); octx.moveTo(fx + fw - bLen, fy); octx.lineTo(fx + fw, fy); octx.lineTo(fx + fw, fy + bLen); octx.stroke();
+        octx.beginPath(); octx.moveTo(fx, fy + fh - bLen); octx.lineTo(fx, fy + fh); octx.lineTo(fx + bLen, fy + fh); octx.stroke();
+        octx.beginPath(); octx.moveTo(fx + fw - bLen, fy + fh); octx.lineTo(fx + fw, fy + fh); octx.lineTo(fx + fw, fy + fh - bLen); octx.stroke();
+
+        // Göz noktaları (Hafif biometric tracker dots)
+        if (faceLandmarks && faceLandmarks.length >= 2) {
+          octx.fillStyle = isGazeWarning ? '#f59e0b' : '#10b981';
+          faceLandmarks.slice(0, 2).forEach(pt => {
+            octx.beginPath();
+            octx.arc(pt[0], pt[1], 3, 0, Math.PI * 2);
+            octx.fill();
+          });
+        }
+
+        // Başlık etiketi
+        octx.fillStyle = isGazeWarning ? 'rgba(245, 158, 11, 0.95)' : 'rgba(16, 185, 129, 0.9)';
+        octx.fillRect(fx, Math.max(0, fy - 20), Math.max(180, fw * 0.7), 20);
+        octx.fillStyle = '#0f172a';
+        octx.font = 'bold 10px monospace';
+        
+        let statusTag = `🎯 DOĞAL EKRAN ODAĞI: %${Math.round(liveGazeScore)}`;
+        if (gazeDir === "SAĞA_BAKIŞ") statusTag = `⚠️ SAĞA BAKIŞ / 2. EKRAN (%${Math.round(liveGazeScore)})`;
+        else if (gazeDir === "SOLA_BAKIŞ") statusTag = `⚠️ SOLA BAKIŞ (%${Math.round(liveGazeScore)})`;
+        else if (gazeDir === "AŞAĞI_BAKIŞ") statusTag = `⚠️ AŞAĞI BAKIŞ / NOT (%${Math.round(liveGazeScore)})`;
+
+        octx.fillText(statusTag, fx + 5, Math.max(13, fy - 6));
+      }
+    }
+
+    function triggerPhoneDetected(customConfidence = 98.4, bbox = null) {
+      phoneDetectedCount++;
+      const countEl = document.getElementById('studio-phone-count');
+      if (countEl) {
+        countEl.innerText = phoneDetectedCount;
+        countEl.className = "text-red-400 font-bold animate-ping";
+        setTimeout(() => { countEl.className = "text-red-400 font-bold"; }, 800);
+      }
+      const shieldPhoneCountEl = document.getElementById('shield-phone-count');
+      if (shieldPhoneCountEl) shieldPhoneCountEl.innerText = phoneDetectedCount;
+
+      playAlertBeep();
+
+      // Kamera ekranına kırmızı hedef kutusu bindir
+      const overlay = document.getElementById('phone-detection-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+
+      // Mülakat kaydı ve zamanlayıcıyı geçici duraklat
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+      }
+      if (speechRecognizer) {
+        try { speechRecognizer.stop(); } catch(e) {}
+      }
+
+      // Güvenlik ve Soru Protokolü Modalını Aç
+      const breachModal = document.getElementById('phone-breach-modal');
+      if (breachModal) breachModal.classList.remove('hidden');
+
+      // Telemetri event stream'e event üret
+      fetch('/api/telemetry/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: 'SES-LIVE-' + (currentQuestionIndex + 1),
+          event_type: 'PHONE_DETECTED',
+          details: `Kadrajda gerçek zamanlı cep telefonu tespit edildi (%${customConfidence} CV güven) - İhlal #${phoneDetectedCount}`
+        })
+      }).catch(function(e){});
+    }
+
+    function resolvePhoneBreach() {
+      const breachModal = document.getElementById('phone-breach-modal');
+      if (breachModal) breachModal.classList.add('hidden');
+      const overlay = document.getElementById('phone-detection-overlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      if (mediaRecorder && mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+      }
+      if (speechRecognizer && isInterviewActive) {
+        try { speechRecognizer.start(); } catch(e) {}
+      }
+    }
+
+    function toggleEyeContactLoss() {
+      isEyeContactLost = !isEyeContactLost;
+      const overlay = document.getElementById('eye-loss-overlay');
+      const pill = document.getElementById('studio-eye-pill');
+      const dot = document.getElementById('studio-eye-dot');
+      const val = document.getElementById('studio-eye-val');
+      const btnLabel = document.getElementById('btn-sim-eye-label');
+
+      if (isEyeContactLost) {
+        eyeContactLossCount++;
+        if (overlay) overlay.classList.remove('hidden');
+        if (val) val.innerText = '%48 (Kayıp)';
+        if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping";
+        if (pill) pill.className = "bg-amber-950/70 border border-amber-500/40 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-amber-300 backdrop-blur-md flex items-center gap-1";
+        if (btnLabel) btnLabel.innerText = "Gözü Düzelt (%94)";
+
+        fetch('/api/telemetry/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: 'SES-LIVE-' + (currentQuestionIndex + 1),
+            event_type: 'EYE_CONTACT_LOST',
+            details: 'Aday ekrandan gözünü kaçırdı / kopya-not okuma şüphesi (İhlal #' + eyeContactLossCount + ')'
+          })
+        }).catch(function(e){});
+      } else {
+        if (overlay) overlay.classList.add('hidden');
+        if (val) val.innerText = '%94';
+        if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+        if (pill) pill.className = "bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-emerald-400 backdrop-blur-md flex items-center gap-1";
+        if (btnLabel) btnLabel.innerText = "Gözü Kaçır (Odak)";
+      }
+    }
+
+    // ==================== CV SORULARI & TTS ====================
+    async function loadCVQuestions() {
+      try {
+        const res = await fetch('/api/agent/cv-questions');
+        const data = await res.json();
+        cvQuestionsList = data.questions || [];
+        selectCVQuestion(0);
+      } catch (err) {}
+    }
+
+    function selectCVQuestion(idx) {
+      currentQuestionIndex = idx;
+      [0, 1, 2].forEach(i => {
+        const el = document.getElementById(`qtab-${i}`);
+        if (!el) return;
+        if (i === idx) {
+          el.className = "p-2.5 rounded-xl text-left bg-brand-50 border border-brand-300 text-brand-700 dark:bg-brand-600/30 dark:border-brand-500/50 dark:text-brand-200 text-xs font-semibold transition";
+        } else {
+          el.className = "p-2.5 rounded-xl text-left bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition";
+        }
+      });
+
+      if (cvQuestionsList[idx]) {
+        document.getElementById('active-question-text').innerText = cvQuestionsList[idx].question;
+      }
+    }
+
+    function speakCurrentQuestion() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const text = document.getElementById('active-question-text').innerText;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'tr-TR';
+      utter.rate = 0.92;
+      const voices = window.speechSynthesis.getVoices();
+      const trVoice = voices.find(v => v.lang.includes('tr') || v.lang.includes('TR'));
+      if (trVoice) utter.voice = trVoice;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // ==================== CANLI KAMERA & STT ====================
+    function openStudioModal() {
+      tabSwitchCount = 0;
+      phoneDetectedCount = 0;
+      eyeContactLossCount = 0;
+      isEyeContactLost = false;
+
+      document.getElementById('tab-switch-badge').innerText = "0";
+      document.getElementById('studio-phone-count').innerText = "0";
+      document.getElementById('studio-eye-val').innerText = "%94";
+      document.getElementById('studio-eye-dot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      document.getElementById('studio-eye-pill').className = "bg-black/70 border border-white/10 text-[9px] font-mono px-2.5 py-0.5 rounded-full text-emerald-400 backdrop-blur-md flex items-center gap-1";
+
+      const phoneOverlay = document.getElementById('phone-detection-overlay');
+      if (phoneOverlay) phoneOverlay.classList.add('hidden');
+      const eyeOverlay = document.getElementById('eye-loss-overlay');
+      if (eyeOverlay) eyeOverlay.classList.add('hidden');
+      const phoneModal = document.getElementById('phone-breach-modal');
+      if (phoneModal) phoneModal.classList.add('hidden');
+
+      loadCVQuestions();
+      document.getElementById('studio-modal').classList.remove('hidden');
+    }
+
+    function closeStudioModal() {
+      isInterviewActive = false;
+      isCvRunning = false;
+      if (cvLoopInterval) {
+        clearInterval(cvLoopInterval);
+        cvLoopInterval = null;
+      }
+      const overlayCanvas = document.getElementById('cv-overlay-canvas');
+      if (overlayCanvas) {
+        const octx = overlayCanvas.getContext('2d');
+        octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
+      if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+      if (speechRecognizer) { try { speechRecognizer.stop(); } catch(e) {} }
+      if (audioVisualizerLoop) cancelAnimationFrame(audioVisualizerLoop);
+      if (audioCtx) { try { audioCtx.close(); } catch(e) {} }
+      document.getElementById('camera-prompt').classList.remove('hidden');
+      document.getElementById('studio-modal').classList.add('hidden');
+      document.getElementById('security-shield').classList.add('hidden');
+      document.getElementById('phone-breach-modal').classList.add('hidden');
+      document.getElementById('phone-detection-overlay').classList.add('hidden');
+      document.getElementById('eye-loss-overlay').classList.add('hidden');
+    }
+
+    async function startCamera() {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('studio-video').srcObject = mediaStream;
+        document.getElementById('camera-prompt').classList.add('hidden');
+        document.getElementById('btn-start-record').disabled = false;
+        initAudioVisualizer(mediaStream);
+        initLiveSpeechRecognition();
+        initRealtimeCVEngine();
+      } catch (err) {
+        alert("Kamera/Mikrofona erişilemedi: " + err.message);
+      }
+    }
+
+    function initAudioVisualizer(stream) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 32;
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyserNode);
+
+        const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+        const levelBar = document.getElementById('audio-level-bar');
+        const eqBars = document.querySelectorAll('.eq-bar-live');
+
+        function renderFrame() {
+          analyserNode.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+          const avg = sum / dataArray.length;
+          const pct = Math.min(Math.round((avg / 128) * 100), 100);
+          if (levelBar) levelBar.style.width = pct + '%';
+
+          // Frekans equalizer barlarını sese göre dinamik zıplat
+          if (eqBars && eqBars.length > 0) {
+            for (let i = 0; i < eqBars.length; i++) {
+              const val = dataArray[i % dataArray.length] || 0;
+              const barHeight = Math.min(Math.max((val / 255) * 100, 20), 100);
+              eqBars[i].style.height = `${barHeight}%`;
+            }
+          }
+
+          audioVisualizerLoop = requestAnimationFrame(renderFrame);
+        }
+        renderFrame();
+      } catch(e) {}
+    }
+
+    function initLiveSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      speechRecognizer = new SpeechRecognition();
+      speechRecognizer.continuous = true;
+      speechRecognizer.interimResults = true;
+      speechRecognizer.lang = 'tr-TR';
+
+      speechRecognizer.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) liveSpokenTranscript += event.results[i][0].transcript + " ";
+          else interim += event.results[i][0].transcript;
+        }
+
+        const fullText = (liveSpokenTranscript + " " + interim).trim();
+        document.getElementById('live-transcript-text').innerText = fullText || "Dinleniyor...";
+
+        highlightLiveKeywords(fullText);
+        triggerDynamicCatcher(fullText);
+      };
+    }
+
+    function highlightLiveKeywords(text) {
+      const lower = text.toLowerCase();
+      const keys = ["c#", "oop", "class", "nesne", "metot", "veritabanı", "sql", "linq", "verisepeti", "hata"];
+      const matched = keys.filter(k => lower.includes(k));
+      const container = document.getElementById('live-detected-chips');
+      if (matched.length === 0) {
+        container.innerHTML = '<span class="text-slate-400 italic">Dinleniyor...</span>';
+      } else {
+        container.innerHTML = matched.map(m => 
+          `<span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-500/30">${m}</span>`
+        ).join(' ');
+      }
+    }
+
+    let catcherDebounce = null;
+    function triggerDynamicCatcher(text) {
+      if (text.length < 20) return;
+      clearTimeout(catcherDebounce);
+      catcherDebounce = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/agent/generate-followup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ spoken_text: text })
+          });
+          const data = await res.json();
+          if (data && data.question) {
+            document.getElementById('followup-trigger-tag').innerText = data.triggered_by;
+            document.getElementById('dynamic-followup-text').innerText = `"${data.question}"`;
+            document.getElementById('dynamic-followup-box').classList.remove('hidden');
+          }
+        } catch (e) {}
+      }, 1200);
+    }
+
+    function applyDynamicQuestion() {
+      const q = document.getElementById('dynamic-followup-text').innerText.replace(/^"|"$/g, '');
+      document.getElementById('active-question-text').innerText = q;
+      document.getElementById('dynamic-followup-box').classList.add('hidden');
+    }
+
+    function startRecording() {
+      recordedChunks = [];
+      liveSpokenTranscript = "";
+      phoneDetectedCount = 0;
+      eyeContactLossCount = 0;
+      isEyeContactLost = false;
+
+      document.getElementById('studio-phone-count').innerText = "0";
+      document.getElementById('studio-eye-val').innerText = "%94";
+      document.getElementById('live-transcript-text').innerText = "Konuşmanız dinleniyor...";
+
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+      mediaRecorder.start();
+
+      if (speechRecognizer) { try { speechRecognizer.start(); } catch(e) {} }
+
+      isInterviewActive = true;
+      document.getElementById('btn-start-record').disabled = true;
+      document.getElementById('btn-stop-record').disabled = false;
+      document.getElementById('recording-badge').classList.remove('hidden');
+
+      recordStartTime = Date.now();
+      recordTimerInterval = setInterval(() => {
+        const diff = Math.floor((Date.now() - recordStartTime) / 1000);
+        const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+        const secs = String(diff % 60).padStart(2, '0');
+        document.getElementById('recording-timer').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopRecording() {
+      isInterviewActive = false;
+      mediaRecorder.stop();
+      if (speechRecognizer) { try { speechRecognizer.stop(); } catch(e) {} }
+      clearInterval(recordTimerInterval);
+      document.getElementById('btn-stop-record').disabled = true;
+      document.getElementById('recording-badge').classList.add('hidden');
+      
+      // Çok aşamalı analiz overlay'ini göster
+      const overlay = document.getElementById('studio-processing-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'candidate_interview.webm');
+        formData.append('candidate_name', 'Ömer Çakan');
+        formData.append('role', 'Junior Backend Developer (C# / .NET)');
+        formData.append('interview_question', document.getElementById('active-question-text').innerText);
+        formData.append('live_transcript', liveSpokenTranscript);
+        formData.append('tab_switch_count', tabSwitchCount);
+        formData.append('phone_detected_count', phoneDetectedCount);
+        formData.append('eye_contact_loss_count', eyeContactLossCount);
+
+        try {
+          const res = await fetch('/api/upload-media-interview', { method: 'POST', body: formData });
+          const result = await res.json();
+          
+          setTimeout(() => {
+            if (overlay) overlay.classList.add('hidden');
+            closeStudioModal();
+            loadDashboardData();
+            // Analiz tamamlanınca adayın çok modlu karne modalını doğrudan aç
+            setTimeout(() => {
+              if (sessionsCache && sessionsCache.length > 0) {
+                openDetailModal(0);
+              }
+            }, 400);
+          }, 1200);
+
+        } catch (e) {
+          alert("Medya işleme hatası: " + e.message);
+          if (overlay) overlay.classList.add('hidden');
+        }
+      };
+    }
+
+    // ==================== DASHBOARD ANALİTİĞİ ====================
+    async function loadDashboardData() {
+      const pingStart = performance.now();
+      try {
+        const role = document.getElementById('role-filter').value;
+        const [candRes, analyticsRes, agentRes, streamRes, diffRes] = await Promise.all([
+          fetch(`/api/candidates${role ? '?role=' + encodeURIComponent(role) : ''}`),
+          fetch('/api/analytics'),
+          fetch('/api/agent/actions'),
+          fetch('/api/stream-status'),
+          fetch('/api/analytics/question-difficulty')
+        ]);
+
+        const sessions = await candRes.json();
+        const analytics = await analyticsRes.json();
+        const agentActions = await agentRes.json();
+        const streamData = await streamRes.json();
+        const diffData = await diffRes.json();
+
+        sessionsCache = sessions;
+        agentActionsCache = agentActions;
+
+        updateKPIs(analytics.kpis);
+        updateCharts(analytics);
+        renderTable(filterSessionsByStatus(sessions));
+        renderAgentLogs(agentActions);
+        renderQuestionDifficulty(diffData);
+
+        if (streamData && document.getElementById('stream-eps')) {
+          document.getElementById('stream-eps').innerText = streamData.throughput_eps || '0.0';
+        }
+        document.getElementById('server-ping').innerText = Math.round(performance.now() - pingStart);
+      } catch (err) {}
+    }
+
+    async function loadMultimodalAnalytics() {
+      try {
+        const res = await fetch('/api/analytics/multimodal');
+        const data = await res.json();
+        if (data) {
+          if (document.getElementById('mm-snr')) document.getElementById('mm-snr').innerText = (data.avg_snr || 27.4) + ' dB';
+          if (document.getElementById('mm-clarity')) document.getElementById('mm-clarity').innerText = '%' + (data.avg_clarity || 88.2);
+          if (document.getElementById('mm-wpm')) document.getElementById('mm-wpm').innerText = (data.avg_wpm || 125) + ' wpm';
+          if (document.getElementById('mm-silence')) document.getElementById('mm-silence').innerText = '%' + (data.avg_silence_pct || 8.5);
+          if (document.getElementById('mm-focus')) document.getElementById('mm-focus').innerText = '%' + (data.avg_visual_focus || 94.0);
+          if (document.getElementById('mm-eye')) document.getElementById('mm-eye').innerText = '%' + (data.avg_eye_contact || 91.5);
+          if (document.getElementById('mm-phone-breaches')) document.getElementById('mm-phone-breaches').innerText = (data.total_phone_breaches || 0) + ' Kez';
+          if (document.getElementById('mm-eye-breaches')) document.getElementById('mm-eye-breaches').innerText = (data.total_eye_breaches || 0) + ' Kez';
+          if (document.getElementById('mm-latency-val')) document.getElementById('mm-latency-val').innerText = (data.olap_query_latency_ms || 0.28);
+        }
+      } catch (e) {}
+    }
+
+    function setStatusFilter(filter) {
+      activeStatusFilter = filter;
+      ['all', 'rec', 'rev', 'fail'].forEach(k => {
+        const btn = document.getElementById(`filter-btn-${k}`);
+        if (btn) btn.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+      });
+
+      if (filter === 'ALL') document.getElementById('filter-btn-all').className = "px-3 py-1.5 rounded-lg font-semibold bg-brand-600 text-white shadow-sm transition";
+      if (filter === 'RECOMMENDED') document.getElementById('filter-btn-rec').className = "px-3 py-1.5 rounded-lg font-semibold bg-emerald-600 text-white shadow-sm transition";
+      if (filter === 'REVIEW') document.getElementById('filter-btn-rev').className = "px-3 py-1.5 rounded-lg font-semibold bg-amber-600 text-white shadow-sm transition";
+      if (filter === 'FAILED') document.getElementById('filter-btn-fail').className = "px-3 py-1.5 rounded-lg font-semibold bg-rose-600 text-white shadow-sm transition";
+
+      renderTable(filterSessionsByStatus(sessionsCache));
+    }
+
+    function filterSessionsByStatus(sessions) {
+      if (!sessions) return [];
+      if (activeStatusFilter === 'ALL') return sessions;
+      if (activeStatusFilter === 'RECOMMENDED') {
+        return sessions.filter(s => s.final_status === 'FINAL_INTERVIEW_RECOMMENDED' || s.final_status === 'RECOMMENDED');
+      }
+      if (activeStatusFilter === 'REVIEW') {
+        return sessions.filter(s => s.final_status === 'HR_REVIEW_NEEDED' || s.final_status === 'REVIEW');
+      }
+      if (activeStatusFilter === 'FAILED') {
+        return sessions.filter(s => s.final_status === 'INTERVIEW_FAILED' || s.final_status === 'NOT_RECOMMENDED');
+      }
+      return sessions;
+    }
+
+    function updateKPIs(kpis) {
+      if (!kpis) return;
+      document.getElementById('stat-total').innerText = kpis.total_interviews || 0;
+      document.getElementById('stat-recommended').innerText = kpis.recommended || 0;
+      document.getElementById('stat-avg-score').innerText = (kpis.avg_composite_score || kpis.avg_score || 0) + '%';
+      document.getElementById('stat-clarity').innerText = '%' + (kpis.avg_audio_clarity || 88.0);
+      document.getElementById('avg-latency').innerText = kpis.olap_query_ms || kpis.avg_latency_ms || '0.28';
+
+      const total = kpis.total_interviews || 0;
+      const pct = total > 0 ? Math.round(((kpis.recommended || 0) / total) * 100) : 0;
+      document.getElementById('stat-recommended-pct').innerText = `%${pct}`;
+    }
+
+    function renderAgentLogs(actions) {
+      const container = document.getElementById('agent-logs-container');
+      if (!container) return;
+      if (!actions || actions.length === 0) {
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs">Ajan akışı bekleniyor...</div>';
+        return;
+      }
+
+      container.innerHTML = actions.map(act => {
+        let badgeColor = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20";
+        let statusTitle = "ELENDİ (GELİŞİM GERİ BİLDİRİMİ)";
+        if (act.status === "FINAL_INTERVIEW_RECOMMENDED" || act.status === "RECOMMENDED") {
+          badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20";
+          statusTitle = "CANLI TEAMS DAVETİ";
+        } else if (act.status === "HR_REVIEW_NEEDED") {
+          badgeColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20";
+          statusTitle = "İK İNCELEMESİ";
+        }
+
+        return `
+          <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] rounded-2xl space-y-2 shadow-sm">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900 dark:text-white">${act.candidate_name}</span>
+                <span class="text-slate-500 text-[11px]">(${act.role})</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono border ${badgeColor} font-bold">${statusTitle} • %${act.score}</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">${act.timestamp}</span>
+            </div>
+            
+            <p class="text-[11px] text-slate-700 dark:text-slate-300">
+              <strong class="text-purple-700 dark:text-purple-300 font-mono">💡 Muhakeme:</strong> ${act.reasoning}
+            </p>
+
+            ${act.suggested_tech_question ? `
+              <div class="bg-white dark:bg-obsidian-900 p-2.5 rounded-xl border border-brand-200 dark:border-brand-500/20 text-brand-900 dark:text-indigo-100 font-mono text-[11px]">
+                <strong class="text-brand-600 dark:text-brand-400">🎯 İsa Bey İçin Soru:</strong> ${act.suggested_tech_question}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderQuestionDifficulty(diffList) {
+      const container = document.getElementById('question-difficulty-container');
+      if (!container) return;
+      if (!diffList || diffList.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 py-3">Soru analitiği henüz oluşmadı.</div>';
+        return;
+      }
+
+      container.innerHTML = diffList.slice(0, 6).map(q => {
+        const pass = q.pass_rate_pct || 0;
+        let colorClass = "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10";
+        if (pass < 40) colorClass = "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-500/10";
+        else if (pass < 70) colorClass = "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10";
+
+        return `
+          <div class="p-3.5 bg-slate-50 dark:bg-obsidian-950 border border-slate-200 dark:border-white/[0.06] rounded-2xl space-y-2 shadow-sm">
+            <p class="text-xs text-slate-800 dark:text-slate-200 font-medium line-clamp-2" title="${q.question}">${q.question}</p>
+            <div class="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-200 dark:border-white/[0.04]">
+              <span class="text-slate-500">Sorulma: <strong class="text-slate-800 dark:text-slate-200">${q.total_asked}</strong></span>
+              <span class="px-2 py-0.5 rounded-full border text-[10px] font-bold ${colorClass}">%${pass} Geçiş</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateCharts(analytics) {
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#94a3b8' : '#64748b';
+      const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+
+      const roles = (analytics.role_breakdown || []).map(r => r.role.replace("Junior ", "").replace("Specialist", ""));
+      const counts = (analytics.role_breakdown || []).map(r => r.interview_count || r.count);
+      const avgScores = (analytics.role_breakdown || []).map(r => r.avg_score);
+
+      const roleCtx = document.getElementById('roleChart');
+      if (roleCtx) {
+        if (roleChartInstance) roleChartInstance.destroy();
+        roleChartInstance = new Chart(roleCtx.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: roles,
+            datasets: [
+              {
+                label: 'Mülakat Sayısı',
+                data: counts,
+                backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                borderColor: '#4f46e5',
+                borderRadius: 8,
+                borderWidth: 1.5,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Ortalama Skor (%)',
+                data: avgScores,
+                type: 'line',
+                borderColor: '#10b981',
+                backgroundColor: '#10b981',
+                tension: 0.35,
+                pointRadius: 4,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+              y1: { beginAtZero: true, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: textColor } },
+              x: { grid: { display: false }, ticks: { color: textColor } }
+            },
+            plugins: { legend: { labels: { color: textColor, font: { size: 11 } } } }
+          }
+        });
+      }
+
+      const statusDist = analytics.status_distribution || {};
+      const rec = (statusDist['FINAL_INTERVIEW_RECOMMENDED'] || statusDist['RECOMMENDED'] || 0);
+      const rev = (statusDist['HR_REVIEW_NEEDED'] || statusDist['REVIEW'] || 0);
+      const rej = (statusDist['INTERVIEW_FAILED'] || statusDist['NOT_RECOMMENDED'] || 0);
+
+      const statusCtx = document.getElementById('statusChart');
+      if (statusCtx) {
+        if (statusChartInstance) statusChartInstance.destroy();
+        statusChartInstance = new Chart(statusCtx.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Teams Daveti', 'İnceleme', 'Elenen'],
+            datasets: [{
+              data: [rec, rev, rej],
+              backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+              borderWidth: 2,
+              borderColor: isDark ? '#0e1422' : '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } }
+          }
+        });
+      }
+    }
+
+    function renderTable(sessions) {
+      const tbody = document.getElementById('candidate-table-body');
+      if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">Mülakat kaydı bulunmuyor.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sessions.map((s, index) => {
+        let badgeClass = 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
+        let statusText = 'Mülakat Başarısız';
+        if (s.final_status === 'FINAL_INTERVIEW_RECOMMENDED' || s.final_status === 'RECOMMENDED') {
+          badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+          statusText = 'İsa Bey Teams Daveti';
+        } else if (s.final_status === 'HR_REVIEW_NEEDED') {
+          badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
+          statusText = 'İK İncelemesi';
+        }
+
+        const hasMedia = s.media_file_name ? true : false;
+        const compScore = s.multimodal_composite_score > 0 ? s.multimodal_composite_score : s.technical_score;
+
+        let proctoringBadges = '';
+        if (s.phone_detected_count > 0) {
+          proctoringBadges += `<span class="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300 border border-red-200 dark:border-red-500/30" title="Kadrajda cep telefonu tespit edildi">🚨 ${s.phone_detected_count}x Telefon</span>`;
+        }
+        if (s.eye_contact_loss_count > 0) {
+          proctoringBadges += `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30" title="Göz teması kaybı">👁️ ${s.eye_contact_loss_count}x Göz</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
+            <td class="py-3.5 px-3 font-mono text-[11px] text-slate-500 font-semibold">${s.session_id || `SES-${index + 1}`}</td>
+            <td class="py-3.5 px-3 font-bold text-slate-900 dark:text-white flex items-center flex-wrap gap-1">
+              <span>${s.candidate_name}</span>
+              ${proctoringBadges}
+            </td>
+            <td class="py-3.5 px-3 text-slate-600 dark:text-slate-300 font-medium">${s.role}</td>
+            <td class="py-3.5 px-3 font-mono text-[11px]">
+              ${hasMedia 
+                ? '<span class="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">🎬 Video (' + (s.video_resolution || 'HD') + ')</span>' 
+                : '<span class="text-slate-400 font-medium">Simülasyon (16kHz)</span>'}
+            </td>
+            <td class="py-3.5 px-3 font-mono text-cyan-700 dark:text-cyan-400 text-[11px] font-bold">
+              %${s.audio_clarity_score || 88.0} <span class="text-slate-400 text-[10px]">(${s.snr_db || 26.5}dB)</span>
+            </td>
+            <td class="py-3.5 px-3 font-mono font-black ${compScore >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+              %${compScore}
+            </td>
+            <td class="py-3.5 px-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${badgeClass}">${statusText}</span>
+            </td>
+            <td class="py-3.5 px-3 text-right">
+              <button onclick="openDetailModal(${index})" class="px-3 py-1 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-600/20 dark:hover:bg-brand-600/40 dark:text-brand-300 text-[11px] font-bold transition border border-brand-200 dark:border-transparent">
+                Rapor &amp; İzle
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openDetailModal(index) {
+      const s = sessionsCache[index];
+      if (!s) return;
+
+      document.getElementById('modal-name').innerText = s.candidate_name;
+      document.getElementById('modal-session-id').innerText = s.session_id || 'SES-001';
+      document.getElementById('modal-role').innerText = s.role;
+      document.getElementById('modal-question').innerText = s.interview_question || "Soru: C# OOP ve veritabanı deneyiminizi anlatın.";
+      document.getElementById('modal-transcript').innerText = s.transcript_text;
+
+      document.getElementById('modal-clarity').innerText = '%' + (s.audio_clarity_score || 88.0);
+      document.getElementById('modal-snr').innerText = (s.snr_db || 28.5) + ' dB';
+      document.getElementById('modal-wpm').innerText = (s.speech_wpm || 124) + ' wpm';
+
+      // Anti-Cheat & Bütünlük Denetim Verileri
+      const phones = s.phone_detected_count || 0;
+      const eyeLoss = s.eye_contact_loss_count || 0;
+      const tabSwitches = s.tab_switch_count || 0;
+
+      document.getElementById('modal-phone-count').innerText = phones > 0 ? `${phones} Kez İHLAL` : '0 Kez';
+      document.getElementById('modal-phone-count').className = phones > 0 ? 'font-black text-xs font-mono text-red-600 dark:text-red-400' : 'font-black text-xs font-mono text-emerald-600 dark:text-emerald-400';
+
+      document.getElementById('modal-eye-loss-count').innerText = eyeLoss > 0 ? `${eyeLoss} Kez` : '0 Kez';
+      document.getElementById('modal-eye-loss-count').className = eyeLoss > 0 ? 'font-black text-xs font-mono text-amber-600 dark:text-amber-400' : 'font-black text-xs font-mono text-emerald-600 dark:text-emerald-400';
+
+      document.getElementById('modal-tab-switch-count').innerText = `${tabSwitches} Kez`;
+
+      const badgeEl = document.getElementById('modal-integrity-badge');
+      if (phones > 0) {
+        badgeEl.innerText = `🚨 Kadrajda Telefon Algılandı (${phones}x)`;
+        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300 border border-red-300 dark:border-red-500/30';
+      } else if (eyeLoss >= 2) {
+        badgeEl.innerText = `⚠️ Göz Teması Kaybı (${eyeLoss}x)`;
+        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30';
+      } else {
+        badgeEl.innerText = '✅ İhlalsiz Temiz Oturum';
+        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30';
+      }
+
+      const videoPlayer = document.getElementById('modal-video-player');
+      if (s.media_file_name) {
+        videoPlayer.src = `/media/${s.media_file_name}`;
+        videoPlayer.style.display = "block";
+      } else {
+        videoPlayer.style.display = "none";
+      }
+
+      const action = agentActionsCache.find(a => a.candidate_name === s.candidate_name);
+      if (action) {
+        document.getElementById('modal-agent-question').innerText = action.suggested_tech_question || "Adayın temel OOP sınıf mimarisi sorulabilir.";
+      } else {
+        document.getElementById('modal-agent-question').innerText = "İsa Bey için Soru: Adayın projelerinde Class ve Metotları nasıl organize ettiğini sorun.";
+      }
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      const v = document.getElementById('modal-video-player');
+      v.pause();
+      v.src = "";
+      document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    function copyIsaQuestion() {
+      const text = document.getElementById('modal-agent-question').innerText;
+      navigator.clipboard.writeText(text);
+      alert("İsa Bey için soru kopyalandı!");
+    }
+
+    function printCandidateReport() {
+      const name = document.getElementById('modal-name').innerText;
+      const id = document.getElementById('modal-session-id').innerText;
+      const role = document.getElementById('modal-role').innerText;
+      const question = document.getElementById('modal-question').innerText;
+      const agentQuestion = document.getElementById('modal-agent-question').innerText;
+      const transcript = document.getElementById('modal-transcript').innerText;
+      const clarity = document.getElementById('modal-clarity').innerText;
+      const snr = document.getElementById('modal-snr').innerText;
+      const wpm = document.getElementById('modal-wpm').innerText;
+      const phoneCount = document.getElementById('modal-phone-count').innerText;
+      const eyeCount = document.getElementById('modal-eye-loss-count').innerText;
+      const tabCount = document.getElementById('modal-tab-switch-count').innerText;
+      const isBreached = phoneCount.includes('İHLAL') || eyeCount.includes('Kez');
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>HumanOre Çok Modlu Mülakat Karnesi - ${name}</title>
+          <style>
+            body { font-family: system-ui, sans-serif; color: #1e293b; padding: 40px; margin: 0; line-height: 1.5; }
+            .header { border-bottom: 2px solid #6366f1; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .logo { font-size: 20px; font-weight: 800; color: #4338ca; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+            .grid { display: flex; gap: 12px; margin-bottom: 16px; }
+            .metric { flex: 1; background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px; border-radius: 8px; text-align: center; }
+            .metric-val { font-size: 16px; font-weight: 800; color: #3730a3; }
+            .metric-lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; }
+            h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-top: 0; margin-bottom: 6px; }
+            p { margin: 0; font-size: 13px; }
+            .isa-box { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 14px; border-radius: 6px; margin-bottom: 18px; }
+            .integrity-box { background: ${isBreached ? '#fef2f2' : '#f0fdf4'}; border-left: 4px solid ${isBreached ? '#ef4444' : '#10b981'}; padding: 14px; border-radius: 6px; margin-bottom: 18px; border: 1px solid ${isBreached ? '#fecaca' : '#bbf7d0'}; }
+            .footer { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; font-size: 12px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">HumanOre • TalentPulse Multimodal</div>
+              <p style="color: #64748b; font-size: 12px; margin-top: 4px;">Çok Modlu Ses & Video Mülakat Değerlendirme Karnesi</p>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">Doğrulandı: DuckDB Columnar OLAP</span>
+              <p style="font-size: 11px; color: #64748b; margin-top: 4px;">Oturum: ${id}</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 18px;">
+            <h1 style="font-size: 18px; margin: 0; color: #0f172a;">${name}</h1>
+            <p style="color: #64748b; font-size: 13px;">${role}</p>
+          </div>
+
+          <div class="grid">
+            <div class="metric"><div class="metric-val">${clarity}</div><div class="metric-lbl">Akustik Netlik</div></div>
+            <div class="metric"><div class="metric-val">${snr}</div><div class="metric-lbl">Sinyal-Gürültü (SNR)</div></div>
+            <div class="metric"><div class="metric-val">${wpm}</div><div class="metric-lbl">Konuşma Hızı</div></div>
+            <div class="metric"><div class="metric-val">1280x720</div><div class="metric-lbl">Görüntü Formatı</div></div>
+          </div>
+
+          <!-- Anti-Cheat & Bütünlük Karnesi -->
+          <div class="integrity-box">
+            <h2 style="color: ${isBreached ? '#b91c1c' : '#15803d'}; font-weight: 800;">🛡️ Mülakat Bütünlük & Anti-Cheat Denetimi (Computer Vision)</h2>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <div style="flex: 1; background: white; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-weight: 800; font-size: 13px; color: ${phoneCount.includes('İHLAL') ? '#dc2626' : '#16a34a'};">${phoneCount}</div>
+                <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Telefon Tespiti</div>
+              </div>
+              <div style="flex: 1; background: white; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-weight: 800; font-size: 13px; color: ${eyeCount.includes('Kez') ? '#d97706' : '#16a34a'};">${eyeCount}</div>
+                <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Göz Teması Kaybı</div>
+              </div>
+              <div style="flex: 1; background: white; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-weight: 800; font-size: 13px; color: #334155;">${tabCount}</div>
+                <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Sekme Değişimi</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="isa-box">
+            <h2 style="color: #7c3aed;">🎯 Tech Lead İsa Kedikoğlu İçin Önerilen Mülakat Sorusu</h2>
+            <p style="font-weight: 600; color: #4c1d95;">${agentQuestion}</p>
+          </div>
+
+          <div class="card">
+            <h2>Mülakatta Yanıtlanan Soru</h2>
+            <p>${question}</p>
+          </div>
+
+          <div class="card">
+            <h2>Adayın Sözlü Transkripti</h2>
+            <p style="color: #334155; font-size: 12px; font-style: italic;">"${transcript}"</p>
+          </div>
+
+          <div class="footer">
+            <div>İnceleyen: Otonom İK Ajanı (ReAct Engine)</div>
+            <div>Onaylayan: İsa Kedikoğlu (Teknik Lider) ______________</div>
+          </div>
+          <script>window.onload = function() { window.print(); };<\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    function filterTable() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filtered = sessionsCache.filter(s => 
+        (s.candidate_name && s.candidate_name.toLowerCase().includes(q)) ||
+        (s.role && s.role.toLowerCase().includes(q)) ||
+        (s.session_id && s.session_id.toLowerCase().includes(q))
+      );
+      renderTable(filterSessionsByStatus(filtered));
+    }
+
+    async function simulateBurst(count) {
+      try {
+        await fetch(`/api/simulate-batch?count=${count}`, { method: 'POST' });
+        setTimeout(loadDashboardData, 400);
+      } catch (e) {}
+    }
+
+    loadDashboardData();
+    loadMultimodalAnalytics();
+    setInterval(loadDashboardData, 3000);
+  </script>
+</body>
+</html>

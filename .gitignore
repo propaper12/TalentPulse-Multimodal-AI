@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+.venv/
+
+# DuckDB Analytics
+*.duckdb
+*.duckdb.wal
+
+# Media Storage (Ignore heavy recorded audio/video binaries, preserve folder)
+media_storage/*
+!media_storage/.gitkeep
+test_sample.mp4
+
+# .NET 8
+HumanOreIntegration/bin/
+HumanOreIntegration/obj/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
